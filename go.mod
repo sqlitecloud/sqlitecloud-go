@@ -1,4 +1,4 @@
-module github.com/sqlitecloud/go/sdk
+module github.com/sqlitecloud/go-sdk
 
 go 1.18
 

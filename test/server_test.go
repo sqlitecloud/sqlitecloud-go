@@ -22,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	sqlitecloud "github.com/sqlitecloud/go/sdk"
+	sqlitecloud "github.com/sqlitecloud/go-sdk"
 )
 
 const testDbnameServer = "test-gosdk-server-db.sqlite"

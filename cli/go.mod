@@ -1,4 +1,4 @@
-module github.com/sqlitecloud/go/cli
+module github.com/sqlitecloud/go-cli
 
 go 1.18
 
@@ -17,6 +17,6 @@ require (
 	golang.org/x/sys v0.7.0 // indirect
 )
 
-require github.com/sqlitecloud/go/sdk v0.0.0
+require github.com/sqlitecloud/go-sdk v0.0.0
 
-replace github.com/sqlitecloud/go/sdk v0.0.0 => ../sdk
+replace github.com/sqlitecloud/go-sdk v0.0.0 => ../

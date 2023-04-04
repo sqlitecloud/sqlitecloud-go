@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	sqlitecloud "github.com/sqlitecloud/go/sdk"
+	sqlitecloud "github.com/sqlitecloud/go-sdk"
 )
 
 const testPubsubChannelName = "TestPubsubChannel"

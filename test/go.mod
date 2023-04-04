@@ -1,8 +1,8 @@
-module github.com/sqlitecloud/go/sdk/test
+module github.com/sqlitecloud/go-sdk/test
 
 go 1.18
 
-require github.com/sqlitecloud/go/sdk v0.0.0
+require github.com/sqlitecloud/go-sdk v0.0.0
 
 require (
 	github.com/google/go-cmp v0.5.9 // indirect
@@ -13,4 +13,4 @@ require (
 	golang.org/x/term v0.6.0 // indirect
 )
 
-replace github.com/sqlitecloud/go/sdk v0.0.0 => ../
+replace github.com/sqlitecloud/go-sdk v0.0.0 => ../

@@ -23,7 +23,7 @@ import (
 	"net/url"
 	"testing"
 
-	sqlitecloud "github.com/sqlitecloud/go/sdk"
+	sqlitecloud "github.com/sqlitecloud/go-sdk"
 )
 
 const testDbnameCompress = "test-gosdk-compress-db.sqlite"

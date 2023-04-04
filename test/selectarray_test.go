@@ -20,7 +20,7 @@ package test
 import (
 	"testing"
 
-	sqlitecloud "github.com/sqlitecloud/go/sdk"
+	sqlitecloud "github.com/sqlitecloud/go-sdk"
 )
 
 const testDbnameSelectArray = "test-gosdk-selectarray-db.sqlite"
