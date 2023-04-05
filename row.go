@@ -34,7 +34,6 @@ type ResultRow struct {
 }
 
 // ToJSON returns a JSON representation of this query result row.
-// BUG(andreas): The ResultRow.ToJSON method is not implemented yet.
 func (this *ResultRow) ToJSON() ([]byte, error) { return json.Marshal(this) }
 
 // IsFirst returns true if this query result row is the first in the result set, false otherwise.
@@ -113,7 +112,6 @@ func (this *ResultRow) GetName(Column uint64) (string, error) { return this.resu
 
 // GetMaxWidth returns the number of runes of the value in the specified column with the maximum length in this query result.
 // The Column index is an unsigned int in the range of 0...GetNumberOfColumns() - 1.
-// BUG(andreas): Rename GetWidth->GetmaxWidth
 func (this *ResultRow) GetMaxWidth(Column uint64) (uint64, error) {
 	return this.result.GetMaxColumnWidth(Column)
 }

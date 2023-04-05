@@ -388,8 +388,8 @@ func (this *SQCloud) SetKey(Key string, Value string) error {
 
 // GetKey gets the Value of the key Key and returns it as a string value.
 // If the Key was not found an error is returned.
-// BUG(andreas): If key is not set, DB returns NULL -> does not work with current implementation
 func (this *SQCloud) GetKey(Key string) (string, error) {
+	// BUG(andreas): If key is not set, DB returns NULL -> does not work with current implementation
 	result, err := this.SelectArray("GET KEY ?", []interface{}{Key})
 	if result != nil {
 		defer result.Free()

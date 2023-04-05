@@ -222,7 +222,7 @@ func (this *SQCloud) CheckConnectionParameter() error {
 		case "":
 			break
 		case SQLiteCloudCA:
-			pem = []byte(SqliteCloudCAPEM)
+			pem = []byte(sqliteCloudCAPEM)
 		default:
 			// check if it is a filepath
 			_, err := os.Stat(trimmed)

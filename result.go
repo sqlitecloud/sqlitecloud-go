@@ -107,7 +107,6 @@ func (this *Result) Dump() {
 }
 
 // ToJSON returns a JSON representation of this query result.
-// BUG(andreas): The Result.ToJSON method is not implemented yet.
 func (this *Result) ToJSON() string {
 	buf := new(bytes.Buffer)
 	_, _ = this.DumpToWriter(bufio.NewWriter(buf), OUTFORMAT_JSON, false, "<AUTO>", "NULL", "", 0, false)
