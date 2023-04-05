@@ -15,7 +15,7 @@ $(GOPATH)/bin/sqlc:	*.go cli/sqlc.go
 cli: $(GOPATH)/bin/sqlc
 
 github:
-	open https://github.com/sqlitecloud/sdk 
+	open https://github.com/sqlitecloud/go-sdk 
 	
 diff:
 	git difftool
@@ -39,9 +39,12 @@ ifeq ($(wildcard $(GOPATH)/bin/godoc),)
 endif
 
 doc:	godoc
+ifeq ($(wildcard ./src),)
+	ln -s . src			
+endif
 	@echo "Hit CRTL-C to stop the documentation server..."
-	@( sleep 1 && open http://localhost:6060/pkg/sdk/ ) &
-	@$(GOPATH)/bin/godoc -http=:6060 -index -play -goroot ./
+	@( sleep 1 && open http://localhost:6060/pkg/github.com/sqlitecloud/go-sdk/ ) &
+	@$(GOPATH)/bin/godoc -http=:6060 -index -play
 
 clean:
 	rm -rf $(GOPATH)/bin/sqlc* 

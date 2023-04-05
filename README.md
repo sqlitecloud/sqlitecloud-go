@@ -1,25 +1,5 @@
 # SQLite Cloud GO Client
 
-## Get started
-
-### Fetching the code:
-```console
-cd
-mkdir test
-cd test
-git clone https://github.com/sqlitecloud/sdk
-User: <github user name>
-Password: <access-token or password>
-
-```
-
-### Setting up the development environment
-```console
-go env -w GO111MODULE=on
-export GOPATH=
-echo $GOPATH
-```
-
 ### Run the test for the SDK
 If you want to run the Test programs: `make test`
 
