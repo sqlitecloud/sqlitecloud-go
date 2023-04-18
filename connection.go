@@ -182,7 +182,6 @@ func ParseTlsString(tlsconf string) (secure bool, pem string) {
 // Username, Password and Database are ignored.
 // If a given value does not fulfill the above criteria's, an error is returned.
 func (this *SQCloud) CheckConnectionParameter() error {
-
 	if strings.TrimSpace(this.Host) == "" {
 		return errors.New(fmt.Sprintf("Invalid hostname (%s)", this.Host))
 	}
@@ -274,7 +273,6 @@ func (this *SQCloud) reset() {
 // otherwise, a pointer to the newly established connection is returned.
 func Connect(ConnectionString string) (*SQCloud, error) {
 	config, err := ParseConnectionString(ConnectionString)
-
 	if err != nil {
 		return nil, err
 	}
@@ -284,10 +282,9 @@ func Connect(ConnectionString string) (*SQCloud, error) {
 	if err = connection.Connect(); err != nil {
 		_ = connection.Close()
 		return nil, err
-	} else {
-		err = connection.Compress(connection.CompressMode)
-		return connection, err
 	}
+
+	return connection, err
 }
 
 // Connection Functions
@@ -374,6 +371,10 @@ func (this *SQCloud) reconnect() error {
 
 	if this.MaxRowset > 0 {
 		commands += maxrowsetCommand(this.MaxRowset)
+	}
+
+	if this.CompressMode != "NO" {
+		commands += compressCommand(this.CompressMode)
 	}
 
 	if commands != "" {
