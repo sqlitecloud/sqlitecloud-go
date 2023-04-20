@@ -254,6 +254,9 @@ func parseParameters() (Parameter, error) {
 					p["--timeout"] = getFirstNoneEmptyString([]string{dropError(p.String("--timeout")), fmt.Sprintf("%d", conf.Timeout)})
 				}
 				p["--tls"] = getFirstNoneEmptyString([]string{dropError(p.String("--tls")), conf.Pem})
+				if conf.Secure == false {
+					p["--tls"] = "NO"
+				}
 				p["--apikey"] = getFirstNoneEmptyString([]string{dropError(p.String("--apikey")), conf.ApiKey})
 				if conf.NoBlob {
 					p["--noblob"] = getFirstNoneEmptyString([]string{dropError(p.String("--noblob")), strconv.FormatBool(conf.NoBlob)})
