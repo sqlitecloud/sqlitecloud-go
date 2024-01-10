@@ -240,7 +240,7 @@ func resultToConnectionList(result *Result, err error) ([]SQCloudConnection, err
 
 // ListDatabaseConnections - INTERNAL SERVER COMMAND: Lists all connections that use the specified Database on this SQLite Cloud Database Cluster.
 func (this *SQCloud) ListDatabaseConnections(Database string) ([]SQCloudConnection, error) {
-	result, err := this.SelectArray("LIST DATABASE CONNECTIONS ?", []interface{}{Database})
+	result, err := this.SelectArray("LIST DATABASE ? CONNECTIONS", []interface{}{Database})
 	return resultToConnectionList(result, err)
 }
 

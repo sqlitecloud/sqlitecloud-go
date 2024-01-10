@@ -46,6 +46,8 @@
 
 package sqlitecloud
 
+import "strings"
+
 // GetUUID returns the UUID as string
 func (this *SQCloud) GetUUID() string {
 	return this.uuid // this.CGetCloudUUID()
@@ -82,8 +84,14 @@ func (this *SQCloud) Listen(Channel string) error { // add a call back function.
 }
 
 // Listen subscribes this connection to the specified Table.
-func (this *SQCloud) ListenTable(TableName string) error { // add a call back function...
-	return this.ExecuteArray("LISTEN TABLE ?", []interface{}{TableName})
+func (this *SQCloud) ListenTable(TableName string, DatabaseName string) error { // add a call back function...
+	sql := "LISTEN TABLE ?"
+	args := []interface{}{TableName}
+	if strings.TrimSpace(DatabaseName) != "" {
+		sql += " DATABASE ?"
+		args = append(args, DatabaseName)
+	}
+	return this.ExecuteArray(sql, args)
 }
 
 // Notify sends a wakeup call to the channel Channel
@@ -102,8 +110,14 @@ func (this *SQCloud) Unlisten(Channel string) error {
 }
 
 // Unlisten unsubsribs this connection from the specified Table.
-func (this *SQCloud) UnlistenTable(TableName string) error {
-	return this.ExecuteArray("UNLISTEN TABLE ?", []interface{}{TableName})
+func (this *SQCloud) UnlistenTable(TableName string, DatabaseName string) error {
+	sql := "UNLISTEN TABLE ?"
+	args := []interface{}{TableName}
+	if strings.TrimSpace(DatabaseName) != "" {
+		sql += " DATABASE ?"
+		args = append(args, DatabaseName)
+	}
+	return this.ExecuteArray(sql, args)
 }
 
 // Deletes the specified Channel.

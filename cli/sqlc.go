@@ -256,6 +256,8 @@ func parseParameters() (Parameter, error) {
 				p["--tls"] = getFirstNoneEmptyString([]string{dropError(p.String("--tls")), conf.Pem})
 				if conf.Secure == false {
 					p["--tls"] = "NO"
+				} else if conf.TlsInsecureSkipVerify == true {
+					p["--tls"] = "SKIP"
 				}
 				p["--apikey"] = getFirstNoneEmptyString([]string{dropError(p.String("--apikey")), conf.ApiKey})
 				if conf.NoBlob {
@@ -387,7 +389,7 @@ func main() {
 			MaxRowset:    parameter.MaxRowset,
 		}
 
-		config.Secure, config.Pem = sqlitecloud.ParseTlsString(parameter.Tls)
+		config.Secure, config.TlsInsecureSkipVerify, config.Pem = sqlitecloud.ParseTlsString(parameter.Tls)
 		var db *sqlitecloud.SQCloud = sqlitecloud.New(config)
 
 		if err := db.Connect(); err != nil {
@@ -453,12 +455,20 @@ func main() {
 			}
 
 			prompt := "sqlc > "
-			prompt = "\\H:\\p/\\d\\u > "
+			prompt = "\\u@\\H:\\p/\\d > "
+
+			refreshDB := false
+			if parameter.Database != "" {
+				refreshDB = true
+			}
 
 		Loop:
 			for {
 				out.Flush()
-				db.Database, _ = db.GetDatabase()
+				if refreshDB {
+					db.Database, _ = db.GetDatabase()
+					go func() { dynamic_tokens = db.GetAutocompleteTokens() }() // Update the dynamic tokens in the background...
+				}
 
 				renderdPrompt := prompt
 				renderdPrompt = strings.ReplaceAll(renderdPrompt, "\\H", parameter.Host)
@@ -470,7 +480,6 @@ func main() {
 				renderdPrompt = strings.ReplaceAll(renderdPrompt, "\\t", time.Now().Format("15:04:05"))
 				renderdPrompt = strings.ReplaceAll(renderdPrompt, "\\w", fmt.Sprintf("/%s", dropError(os.Getwd())))
 
-				go func() { dynamic_tokens = db.GetAutocompleteTokens() }() // Update the dynamic tokens in the background...
 				command, err := editor.Prompt(renderdPrompt)
 
 				switch err {
@@ -524,6 +533,9 @@ func main() {
 						default:
 							editor.AppendHistory(command)
 						}
+
+						commandLower := strings.ToLower(command)
+						refreshDB = strings.Contains(commandLower, "use database") || strings.Contains(commandLower, "unuse database") || strings.Contains(commandLower, "create table")
 					}
 				default:
 					bail(out, err.Error(), &parameter)

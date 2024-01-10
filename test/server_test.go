@@ -56,6 +56,10 @@ func TestServer(t *testing.T) {
 		t.Fatal("Checking AUTH: ", err.Error())
 	}
 
+	if err := db.RemoveDatabase(testDbnameServer, true); err != nil { // Database, NoError
+		t.Fatal("REMOVE DATABASE: ", err.Error())
+	}
+
 	// Checking CREATE DATABASE
 	if err := db.CreateDatabase(testDbnameServer, "", "", false); err != nil { // Database, Key, Encoding, NoError
 		t.Fatal("CREATE DATABASE: ", err.Error())

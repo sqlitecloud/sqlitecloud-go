@@ -2,3 +2,4 @@
 cli/.DS_Store
 .DS_Store
 cli/.vscode
+.vscode/launch.json

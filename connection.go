@@ -22,7 +22,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"strconv"
@@ -33,20 +32,21 @@ import (
 )
 
 type SQCloudConfig struct {
-	Host         string
-	Port         int
-	Username     string
-	Password     string
-	Database     string
-	Timeout      time.Duration
-	CompressMode string
-	Secure       bool
-	Pem          string
-	ApiKey       string
-	NoBlob       bool // flag to tell the server to not send BLOB columns
-	MaxData      int  // value to tell the server to not send columns with more than max_data bytes
-	MaxRows      int  // value to control rowset chunks based on the number of rows
-	MaxRowset    int  // value to control the maximum allowed size for a rowset
+	Host                  string
+	Port                  int
+	Username              string
+	Password              string
+	Database              string
+	Timeout               time.Duration
+	CompressMode          string
+	Secure                bool
+	TlsInsecureSkipVerify bool
+	Pem                   string
+	ApiKey                string
+	NoBlob                bool // flag to tell the server to not send BLOB columns
+	MaxData               int  // value to tell the server to not send columns with more than max_data bytes
+	MaxRows               int  // value to control rowset chunks based on the number of rows
+	MaxRowset             int  // value to control the maximum allowed size for a rowset
 }
 
 type SQCloud struct {
@@ -106,6 +106,7 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 		config.Timeout = 0
 		config.CompressMode = "NO"
 		config.Secure = true
+		config.TlsInsecureSkipVerify = false
 		config.Pem = ""
 		config.ApiKey = ""
 		config.NoBlob = false
@@ -133,7 +134,7 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 			case "compress":
 				config.CompressMode = strings.ToUpper(lastLiteral)
 			case "tls":
-				config.Secure, config.Pem = ParseTlsString(lastLiteral)
+				config.Secure, config.TlsInsecureSkipVerify, config.Pem = ParseTlsString(lastLiteral)
 			case "apikey":
 				config.ApiKey = lastLiteral
 			case "noblob":
@@ -161,16 +162,18 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 	return nil, err
 }
 
-func ParseTlsString(tlsconf string) (secure bool, pem string) {
+func ParseTlsString(tlsconf string) (secure bool, tlsInsecureSkipVerify bool, pem string) {
 	switch strings.ToUpper(strings.TrimSpace(tlsconf)) {
 	case "", "0", "N", "NO", "FALSE", "OFF", "DISABLE", "DISABLED":
-		return false, ""
+		return false, false, ""
 	case "1", "Y", "YES", "TRUE", "ON", "ENABLE", "ENABLED":
-		return true, ""
+		return true, false, ""
+	case "skip", "SKIP":
+		return true, true, ""
 	case strings.ToUpper(SQLiteCloudCA), "INTERN", "<USE INTERNAL PEM>":
-		return true, SQLiteCloudCA
+		return true, false, SQLiteCloudCA
 	default:
-		return true, strings.TrimSpace(tlsconf)
+		return true, false, strings.TrimSpace(tlsconf)
 	}
 }
 
@@ -217,7 +220,7 @@ func (this *SQCloud) CheckConnectionParameter() error {
 		var pool *x509.CertPool = nil
 		pem := []byte{}
 
-		switch _, trimmed := ParseTlsString(this.Pem); trimmed {
+		switch _, _, trimmed := ParseTlsString(this.Pem); trimmed {
 		case "":
 			break
 		case SQLiteCloudCA:
@@ -230,7 +233,7 @@ func (this *SQCloud) CheckConnectionParameter() error {
 				pem = []byte(trimmed)
 			} else {
 				// its a file, read its content into the pem string
-				switch bytes, err := ioutil.ReadFile(trimmed); {
+				switch bytes, err := os.ReadFile(trimmed); {
 				case err != nil:
 					return errors.New(fmt.Sprintf("Could not open PEM file in '%s'", trimmed))
 				default:
@@ -249,7 +252,7 @@ func (this *SQCloud) CheckConnectionParameter() error {
 
 		this.cert = &tls.Config{
 			RootCAs:            pool,
-			InsecureSkipVerify: false,
+			InsecureSkipVerify: this.TlsInsecureSkipVerify,
 			MinVersion:         tls.VersionTLS12,
 		}
 	}
