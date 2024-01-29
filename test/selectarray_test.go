@@ -101,3 +101,36 @@ func TestSelectArray(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 }
+
+func TestSelectArrayTableNameWithQuotes(t *testing.T) {
+	// Server API test
+
+	config, err1 := sqlitecloud.ParseConnectionString(testConnectionString)
+	if err1 != nil {
+		t.Fatal(err1.Error())
+	}
+
+	db := sqlitecloud.New(*config)
+	err := db.Connect()
+
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	defer db.Close()
+
+	// Checking CREATE DATABASE
+	if err := db.ExecuteArray("CREATE DATABASE ? IF NOT EXISTS", []interface{}{testDbnameSelectArray}); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Creating Table
+	if err := db.ExecuteArray("SWITCH DATABASE ?; CREATE TABLE 'table '' name' (id INTEGER PRIMARY KEY, value)", []interface{}{testDbnameSelectArray}); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// Checking REMOVE DATABASE
+	if err := db.RemoveDatabase(testDbnameSelectArray, false); err != nil {
+		t.Fatal(err.Error())
+	}
+}

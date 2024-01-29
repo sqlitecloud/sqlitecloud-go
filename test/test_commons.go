@@ -2,7 +2,7 @@ package test
 
 import "flag"
 
-const testConnectionStringLocalhost = "sqlitecloud://admin:admin@localhost:8860?tls=SQLiteCloudCA"
+const testConnectionStringLocalhost = "sqlitecloud://admin:admin@localhost:8860?tls=skip"
 
 const testUsername = "admin"
 const testPassword = "admin"

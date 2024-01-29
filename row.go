@@ -116,8 +116,6 @@ func (this *ResultRow) GetMaxWidth(Column uint64) (uint64, error) {
 	return this.result.GetMaxColumnWidth(Column)
 }
 
-// Die folgenden Methoden sollten überflüssig sein...
-
 // GetType returns the type of the value in column Column of this query result row.
 // The Column index is an unsigned int in the range of 0...GetNumberOfColumns() - 1.
 // Possible return types are: VALUE_INTEGER, VALUE_FLOAT, VALUE_TEXT, VALUE_BLOB, VALUE_NULL

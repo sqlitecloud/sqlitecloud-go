@@ -45,23 +45,35 @@ const OUTFORMAT_TABLE = 8
 const OUTFORMAT_BOX = 9
 const OUTFORMAT_XML = 10
 
+const ROWSET_TYPE_BASIC = 1
+const ROWSET_TYPE_METADATA_v1 = 2
+const ROWSET_TYPE_HEADER_ONLY = 3
+const ROWSET_TYPE_DATA_ONLY = 4
+
 // The Result is either a Literal or a RowSet
 type Result struct {
 	uncompressedChuckSizeSum uint64
 
 	value Value
+	rows  []ResultRow
 
-	rows           []ResultRow
-	ColumnNames    []string
-	ColumnWidth    []uint64
+	// columns metadata
+	Name     []string
+	Width    []uint64
+	DeclType []string
+	DbName   []string
+	TblName  []string
+	OrigName []string
+	Notnull  []int32
+	PriKey   []int32
+	Autoinc  []int32
+
 	MaxHeaderWidth uint64
 }
 
 var OKResult = Result{
 	value:                    Value{Type: '+', Buffer: []byte("OK")}, // This is an unset Value
 	rows:                     nil,
-	ColumnNames:              nil,
-	ColumnWidth:              nil,
 	MaxHeaderWidth:           0,
 	uncompressedChuckSizeSum: 0,
 }
@@ -92,7 +104,7 @@ func (this *Result) GetNumberOfColumns() uint64 {
 	case !this.IsRowSet():
 		return 0
 	default:
-		return uint64(len(this.ColumnWidth))
+		return uint64(len(this.Width))
 	}
 }
 
@@ -124,7 +136,7 @@ func (this *Result) GetMaxColumnWidth(Column uint64) (uint64, error) {
 	case Column >= this.GetNumberOfColumns():
 		return 0, errors.New("Column Index out of bounds")
 	default:
-		return this.ColumnWidth[Column], nil
+		return this.Width[Column], nil
 	}
 }
 
@@ -137,7 +149,7 @@ func (this *Result) GetNameLength(Column uint64) (uint64, error) {
 	case Column >= this.GetNumberOfColumns():
 		return 0, errors.New("Column Index out of bounds")
 	default:
-		return uint64(len(this.ColumnNames[Column])), nil
+		return uint64(len(this.Name[Column])), nil
 	}
 }
 
@@ -187,9 +199,9 @@ func (this *Result) IsRowSet() bool {
 		return false
 	case this.rows == nil:
 		return false
-	case this.ColumnNames == nil:
+	case this.Name == nil:
 		return false
-	case this.ColumnWidth == nil:
+	case this.Width == nil:
 		return false
 	case this.MaxHeaderWidth == 0:
 		return false
@@ -328,8 +340,16 @@ func (this *Result) GetErrorAsString() string {
 func (this *Result) Free() {
 	this.value = Value{Type: 0, Buffer: nil} // GC
 	this.rows = []ResultRow{}                // GC
-	this.ColumnNames = []string{}            // GC
-	this.ColumnWidth = []uint64{}            // GC
+	this.Name = []string{}                   // GC
+	this.Width = []uint64{}                  // GC
+	this.DeclType = []string{}               // GC
+	this.DbName = []string{}
+	this.TblName = []string{}
+	this.OrigName = []string{}
+	this.Notnull = []int32{}
+	this.PriKey = []int32{}
+	this.Autoinc = []int32{}
+
 	this.MaxHeaderWidth = 0
 }
 
@@ -340,7 +360,7 @@ func (this *Result) GetName(Column uint64) (string, error) {
 	case Column >= this.GetNumberOfColumns():
 		return "", errors.New("Column Index out of bounds")
 	default:
-		return this.ColumnNames[Column], nil
+		return this.Name[Column], nil
 	}
 }
 func (this *Result) GetName_(Column uint64) string {
@@ -520,14 +540,14 @@ func renderCenteredString(Buffer string, Width int) string {
 
 func (this *Result) renderHorizontalTableLine(Left string, Fill string, Separator string, Right string) string {
 	outBuffer := ""
-	for _, columnWidth := range this.ColumnWidth {
+	for _, columnWidth := range this.Width {
 		outBuffer = fmt.Sprintf("%s%s%s", outBuffer, strings.Repeat(Fill, int(columnWidth+2)), Separator)
 	}
 	return fmt.Sprintf("%s%s%s", Left, strings.TrimRight(outBuffer, Separator), Right)
 }
 func (this *Result) renderTableColumnNames(Left string, Separator string, Right string) string {
 	outBuffer := ""
-	for forThisColumn, columnWidth := range this.ColumnWidth {
+	for forThisColumn, columnWidth := range this.Width {
 		columnName, _ := this.GetName(uint64(forThisColumn))
 		outBuffer = fmt.Sprintf("%s%s%s", outBuffer, renderCenteredString(columnName, int(columnWidth+2)), Separator)
 	}
@@ -713,14 +733,14 @@ func GetDefaultSeparatorForOutputFormat(Format int) (string, error) {
 	}
 }
 
-//////
+// ////
 // is called from connection.Select
 func (this *SQCloud) readResult() (*Result, error) {
 	ErrorResult := Result{
 		value:                    Value{Type: '-', Buffer: []byte("100000 Unknown internal error")}, // This is an unset Value
 		rows:                     nil,
-		ColumnNames:              nil,
-		ColumnWidth:              nil,
+		Name:                     nil,
+		Width:                    nil,
 		MaxHeaderWidth:           0,
 		uncompressedChuckSizeSum: 0,
 	}
@@ -874,8 +894,8 @@ func (this *SQCloud) readResult() (*Result, error) {
 					offset += bytesRead
 
 					result.rows = make([]ResultRow, int(N))
-					result.ColumnNames = []string{"ARRAY"}
-					result.ColumnWidth = []uint64{5}
+					result.Name = []string{"ARRAY"}
+					result.Width = []uint64{5}
 					result.MaxHeaderWidth = 0
 
 					for row := uint64(0); row < N; row++ {
@@ -888,8 +908,8 @@ func (this *SQCloud) readResult() (*Result, error) {
 							return nil, err
 						default:
 							columnLength := result.rows[row].columns[0].GetLength()
-							if result.ColumnWidth[0] < columnLength {
-								result.ColumnWidth[0] = columnLength
+							if result.Width[0] < columnLength {
+								result.Width[0] = columnLength
 							}
 							if result.MaxHeaderWidth < columnLength {
 								result.MaxHeaderWidth = columnLength
@@ -954,30 +974,130 @@ func (this *SQCloud) readResult() (*Result, error) {
 					// single chunk or first chunk of multiple chunks
 					if IDX == 0 || IDX == 1 {
 						result.rows = []ResultRow{}
-						result.ColumnNames = make([]string, int(NCOLS))
-						result.ColumnWidth = make([]uint64, int(NCOLS))
 						result.MaxHeaderWidth = 0
 
-						for column := uint64(0); column < NCOLS; column++ { // Read in the column names, use the result.value as scratch variable
-							switch val, bytesRead, err := chunk.readValueAt(offset); {
-							case err != nil:
-								return nil, err
-							case !val.IsString():
-								return nil, errors.New("Invalid Column name")
-							default:
-								result.ColumnNames[column] = val.GetString()
-								result.ColumnWidth[column] = val.GetLength()
-								if result.MaxHeaderWidth < result.ColumnWidth[column] {
-									result.MaxHeaderWidth = result.ColumnWidth[column]
+						if VERSION != ROWSET_TYPE_DATA_ONLY {
+							// header is guarantee to contain column names
+							result.Name = make([]string, int(NCOLS))
+							result.Width = make([]uint64, int(NCOLS))
+							for column := uint64(0); column < NCOLS; column++ { // Read in the column names, use the result.value as scratch variable
+								switch val, bytesRead, err := chunk.readValueAt(offset); {
+								case err != nil:
+									return nil, err
+								case !val.IsString():
+									return nil, errors.New("Invalid Column name")
+								default:
+									result.Name[column] = val.GetString()
+									result.Width[column] = val.GetLength()
+									if result.MaxHeaderWidth < result.Width[column] {
+										result.MaxHeaderWidth = result.Width[column]
+									}
+									offset += bytesRead
 								}
-								offset += bytesRead
+							}
+
+							// check if additional metadata is contained
+							if VERSION == ROWSET_TYPE_METADATA_v1 {
+								result.DeclType = make([]string, int(NCOLS))
+								result.DbName = make([]string, int(NCOLS))
+								result.TblName = make([]string, int(NCOLS))
+								result.OrigName = make([]string, int(NCOLS))
+								result.Notnull = make([]int32, int(NCOLS))
+								result.PriKey = make([]int32, int(NCOLS))
+								result.Autoinc = make([]int32, int(NCOLS))
+
+								// column declared types
+								for column := uint64(0); column < NCOLS; column++ {
+									switch val, bytesRead, err := chunk.readValueAt(offset); {
+									case err != nil:
+										return nil, err
+									case !val.IsString() && !val.IsNULL():
+										return nil, errors.New("Invalid decltype value")
+									default:
+										result.DeclType[column] = val.GetString()
+										offset += bytesRead
+									}
+								}
+
+								// column database names
+								for column := uint64(0); column < NCOLS; column++ {
+									switch val, bytesRead, err := chunk.readValueAt(offset); {
+									case err != nil:
+										return nil, err
+									case !val.IsString() && !val.IsNULL():
+										return nil, errors.New("Invalid dbname value")
+									default:
+										result.DbName[column] = val.GetString()
+										offset += bytesRead
+									}
+								}
+
+								// column table names
+								for column := uint64(0); column < NCOLS; column++ {
+									switch val, bytesRead, err := chunk.readValueAt(offset); {
+									case err != nil:
+										return nil, err
+									case !val.IsString() && !val.IsNULL():
+										return nil, errors.New("Invalid tblname value")
+									default:
+										result.TblName[column] = val.GetString()
+										offset += bytesRead
+									}
+								}
+
+								// column origin names
+								for column := uint64(0); column < NCOLS; column++ {
+									switch val, bytesRead, err := chunk.readValueAt(offset); {
+									case err != nil:
+										return nil, err
+									case !val.IsString():
+										return nil, errors.New("Invalid origin name value")
+									default:
+										result.OrigName[column] = val.GetString()
+										offset += bytesRead
+									}
+								}
+
+								// column not null flag
+								for column := uint64(0); column < NCOLS; column++ {
+									switch val, bytesRead, err := chunk.readValueAt(offset); {
+									case err != nil:
+										return nil, err
+									case !val.IsInteger():
+										return nil, errors.New("Invalid not null value")
+									default:
+										result.Notnull[column], _ = val.GetInt32()
+										offset += bytesRead
+									}
+								}
+
+								// column primary key flag
+								for column := uint64(0); column < NCOLS; column++ {
+									switch val, bytesRead, err := chunk.readValueAt(offset); {
+									case err != nil:
+										return nil, err
+									case !val.IsInteger():
+										return nil, errors.New("Invalid primary key value")
+									default:
+										result.PriKey[column], _ = val.GetInt32()
+										offset += bytesRead
+									}
+								}
+
+								// column autoincrement key flag
+								for column := uint64(0); column < NCOLS; column++ {
+									switch val, bytesRead, err := chunk.readValueAt(offset); {
+									case err != nil:
+										return nil, err
+									case !val.IsInteger():
+										return nil, errors.New("Invalid autoinc value")
+									default:
+										result.Autoinc[column], _ = val.GetInt32()
+										offset += bytesRead
+									}
+								}
 							}
 						}
-					}
-
-					if VERSION != 1 {
-						// not yet supported
-						return nil, fmt.Errorf("Unsupported rowset version %d", VERSION)
 					}
 
 					// read all the rows from this chunk
@@ -996,8 +1116,8 @@ func (this *SQCloud) readResult() (*Result, error) {
 								return nil, err
 							default:
 								columnLength := rows[row].columns[column].GetLength()
-								if result.ColumnWidth[column] < columnLength {
-									result.ColumnWidth[column] = columnLength
+								if result.Width[column] < columnLength {
+									result.Width[column] = columnLength
 								}
 								if result.MaxHeaderWidth < columnLength {
 									result.MaxHeaderWidth = columnLength
@@ -1014,9 +1134,6 @@ func (this *SQCloud) readResult() (*Result, error) {
 
 					if Type == CMD_ROWSET {
 						return &result, nil
-					} // return if it is a rowset
-					if _, err := this.sendString("OK"); err != nil { // ask the server for the next chunk and loop (Thank's Andrea)
-						return nil, err
 					}
 
 				case CMD_RAWJSON:

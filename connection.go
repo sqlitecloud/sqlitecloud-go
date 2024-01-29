@@ -616,7 +616,7 @@ func (this *SQCloud) Execute(SQL string) error {
 	if result, err := this.Select(SQL); result != nil {
 		defer result.Free()
 
-		if !result.IsOK() {
+		if !result.IsOK() && !result.IsArray() {
 			return errors.New("ERROR: Unexpected Result (-1)")
 		}
 		return err
@@ -629,7 +629,7 @@ func (this *SQCloud) ExecuteArray(SQL string, values []interface{}) error {
 	if result, err := this.SelectArray(SQL, values); result != nil {
 		defer result.Free()
 
-		if !result.IsOK() {
+		if !result.IsOK() && !result.IsArray() {
 			return errors.New("ERROR: Unexpected Result (-1)")
 		}
 		return err

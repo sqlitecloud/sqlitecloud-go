@@ -2,7 +2,7 @@
 //                    ////              SQLite Cloud
 //        ////////////  ///
 //      ///             ///  ///        Product     : SQLite Cloud CLI Application
-//     ///             ///  ///         Version     : 1.1.1
+//     ///             ///  ///         Version     : 1.1.0
 //     //             ///   ///  ///    Date        : 2021/10/08
 //    ///             ///   ///  ///    Author      : Andreas Pfeil
 //   ///             ///   ///  ///
@@ -37,7 +37,7 @@ import (
 
 var app_name = "sqlc"
 var long_name = "SQLite Cloud Command Line Application"
-var version = "version 1.0.0"
+var version = "version 1.1.0"
 var copyright = "(c) 2021 by SQLite Cloud Inc."
 var history_file = fmt.Sprintf("~/.%s_history.txt", app_name)
 
