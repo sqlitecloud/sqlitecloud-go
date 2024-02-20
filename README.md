@@ -1,5 +1,5 @@
 
-# SQLite Cloud Client SDK for Go
+# SQLite Cloud Client SDK for Go v1.0.2
 
 The SQLite Cloud Client SDK for Go (sqlitecloud/go-sdk) is the Go Programming Language application programmer's interface to [SQLite Cloud](https://sqlitecloud.io/). It is a set of library functions that allow client programs to pass queries and SQL commands to the SQLite Cloud backend server and to receive the results of these queries. In addition to the standard SQLite statements, several other [commands](https://docs.sqlitecloud.io/docs/commands) are supported.
 
