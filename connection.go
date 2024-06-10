@@ -75,7 +75,7 @@ func New(config SQCloudConfig) *SQCloud {
 	return &SQCloud{SQCloudConfig: config}
 }
 
-// init registers the sqlitecloud scheme in the connection steing parser.
+// init registers the sqlitecloud scheme in the connection string parser.
 func init() {
 	dburl.Register(dburl.Scheme{
 		Driver:    "sc", // sqlitecloud
@@ -186,7 +186,7 @@ func ParseTlsString(tlsconf string) (secure bool, tlsInsecureSkipVerify bool, pe
 // If a given value does not fulfill the above criteria's, an error is returned.
 func (this *SQCloud) CheckConnectionParameter() error {
 	if strings.TrimSpace(this.Host) == "" {
-		return errors.New(fmt.Sprintf("Invalid hostname (%s)", this.Host))
+		return fmt.Errorf("Invalid hostname (%s)", this.Host)
 	}
 
 	ip := net.ParseIP(this.Host)
