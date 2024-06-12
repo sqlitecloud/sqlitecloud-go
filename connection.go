@@ -48,9 +48,6 @@ type SQCloudConfig struct {
 	NonLinearizable       bool          // Request for immediate responses from the server node without waiting for linerizability guarantees
 	TlsInsecureSkipVerify bool          // Accept invalid TLS certificates (no_verify_certificate)
 	Pem                   string
-	RootCertificate       string
-	ClientCertificate     string
-	ClientCertificateKey  string
 	ApiKey                string
 	NoBlob                bool // flag to tell the server to not send BLOB columns
 	MaxData               int  // value to tell the server to not send columns with more than max_data bytes
@@ -125,9 +122,6 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 		config.NonLinearizable = false
 		config.TlsInsecureSkipVerify = false
 		config.Pem = ""
-		config.RootCertificate = ""
-		config.ClientCertificate = ""
-		config.ClientCertificateKey = ""
 		config.NoBlob = false
 		config.MaxData = 0
 		config.MaxRows = 0
@@ -191,12 +185,6 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 				}
 			case "tls":
 				config.Secure, config.TlsInsecureSkipVerify, config.Pem = ParseTlsString(lastLiteral)
-			case "root_certificate":
-				config.RootCertificate = lastLiteral
-			case "client_certificate":
-				config.ClientCertificate = lastLiteral
-			case "client_certificate_key":
-				config.ClientCertificateKey = lastLiteral
 			case "apikey":
 				config.ApiKey = lastLiteral
 			case "noblob":

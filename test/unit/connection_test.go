@@ -156,24 +156,6 @@ func TestParseConnectionStringWithParameters(t *testing.T) {
 			expectedValue: true,
 		},
 		{
-			param:         "root_certificate",
-			configParam:   "RootCertificate",
-			value:         "cert1234",
-			expectedValue: "cert1234",
-		},
-		{
-			param:         "client_certificate",
-			configParam:   "ClientCertificate",
-			value:         "cert1234",
-			expectedValue: "cert1234",
-		},
-		{
-			param:         "client_certificate_key",
-			configParam:   "ClientCertificateKey",
-			value:         "certkey123",
-			expectedValue: "certkey123",
-		},
-		{
 			param:         "noblob",
 			configParam:   "NoBlob",
 			value:         "true",
