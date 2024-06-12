@@ -47,7 +47,7 @@ type SQCloudConfig struct {
 	Secure                bool          // Connect using plain TCP port, without TLS encryption, NOT RECOMMENDED (insecure)
 	NonLinearizable       bool          // Request for immediate responses from the server node without waiting for linerizability guarantees
 	TlsInsecureSkipVerify bool          // Accept invalid TLS certificates (no_verify_certificate)
-	Pem                   string        // TODO: ?
+	Pem                   string
 	RootCertificate       string
 	ClientCertificate     string
 	ClientCertificateKey  string
