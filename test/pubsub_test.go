@@ -20,6 +20,7 @@ package test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -32,13 +33,17 @@ const testPubsubChannelName = "TestPubsubChannel"
 var testPubsubMessage = map[string]string{"msg_id": "12345", "msg_content": "this is the content"}
 
 func TestPubsub(t *testing.T) {
-	db1, err := sqlitecloud.Connect(testConnectionString)
+	connectionString, _ := os.LookupEnv("SQLITE_CONNECTION_STRING")
+	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
+	connectionString += "?apikey=" + apikey
+
+	db1, err := sqlitecloud.Connect(connectionString)
 	if err != nil {
 		t.Fatal("Connect 1: ", err.Error())
 	}
 	defer db1.Close()
 
-	db2, err := sqlitecloud.Connect(testConnectionString)
+	db2, err := sqlitecloud.Connect(connectionString)
 	if err != nil {
 		t.Fatal("Connect 2: ", err.Error())
 	}

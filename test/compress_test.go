@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"os"
 	"testing"
 
 	sqlitecloud "github.com/sqlitecloud/go-sdk"
@@ -31,7 +32,11 @@ const testCompressKey = "compress"
 const testCompressValue = "LZ4"
 
 func TestCompress(t *testing.T) {
-	url, err := url.Parse(testConnectionString)
+	connectionString, _ := os.LookupEnv("SQLITE_CONNECTION_STRING")
+	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
+	connectionString += "?apikey=" + apikey
+
+	url, err := url.Parse(connectionString)
 	values := url.Query()
 	values.Add(testCompressKey, testCompressValue)
 	url.RawQuery = values.Encode()

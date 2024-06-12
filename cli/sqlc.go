@@ -91,6 +91,15 @@ Connection Options:
   -w, --password PASSWORD  Use PASSWORD for authentication
   -t, --timeout SECS       Set Timeout for network operations to SECS seconds [default::10]
   -c, --compress (NO|LZ4)  Use line compression [default::NO]
+  -z, --zerotext           Text ends with 0 value
+  -m, --memory             Use in-memory database
+  -e, --create             Create database if it does not exist
+  -i, --nonlinearizable    Use non-linearizable mode for queries
+  -a, --apikey KEY         Use API key for authentication
+  -n, --noblob             Disable BLOB support
+  -x, --maxdata SIZE       Set maximum data size for queries
+  -y, --maxrows ROWS       Set maximum number of rows for queries
+  -r, --maxrowset ROWS     Set maximum number of rows per rowset for queries
   --tls [YES|NO|INTERN|FILE] Encrypt the database connection using the host's root CA set (YES), a custom CA with a PEM from FILE (FILE), the internal SQLiteCloud CA (INTERN), or disable the encryption (NO) [default::YES]
 `
 
@@ -131,16 +140,20 @@ type Parameter struct {
 	Format       string `docopt:"--format"`
 	OutPutFormat int    `docopt:"--outputformat"`
 
-	Host      string `docopt:"--host"`
-	Port      int    `docopt:"--port"`
-	User      string `docopt:"--user"`
-	Password  string `docopt:"--password"`
-	Database  string `docopt:"--dbname"`
-	ApiKey    string `docopt:"--apikey"`
-	NoBlob    bool   `docopt:"--noblob"`
-	MaxData   int    `docopt:"--maxdata"`
-	MaxRows   int    `docopt:"--maxrows"`
-	MaxRowset int    `docopt:"--maxrowset"`
+	Host            string `docopt:"--host"`
+	Port            int    `docopt:"--port"`
+	User            string `docopt:"--user"`
+	Password        string `docopt:"--password"`
+	Database        string `docopt:"--dbname"`
+	Zerotext        bool   `docopt:"--zerotext"`
+	Memory          bool   `docopt:"--memory"`
+	Create          bool   `docopt:"--create"`
+	NonLinearizable bool   `docopt:"--nonlinearizable"`
+	ApiKey          string `docopt:"--apikey"`
+	NoBlob          bool   `docopt:"--noblob"`
+	MaxData         int    `docopt:"--maxdata"`
+	MaxRows         int    `docopt:"--maxrows"`
+	MaxRowset       int    `docopt:"--maxrowset"`
 
 	Timeout  int      `docopt:"--timeout"`
 	Compress string   `docopt:"--compress"`
@@ -245,23 +258,46 @@ func parseParameters() (Parameter, error) {
 				p["--user"] = getFirstNoneEmptyString([]string{dropError(p.String("--user")), conf.Username})
 				p["--password"] = getFirstNoneEmptyString([]string{dropError(p.String("--password")), conf.Password})
 				p["--dbname"] = getFirstNoneEmptyString([]string{dropError(p.String("--dbname")), conf.Database})
-				p["--host"] = getFirstNoneEmptyString([]string{dropError(p.String("--host")), conf.Host})
-				p["--compress"] = getFirstNoneEmptyString([]string{dropError(p.String("--compress")), conf.CompressMode})
 				if conf.Port > 0 {
 					p["--port"] = getFirstNoneEmptyString([]string{dropError(p.String("--port")), fmt.Sprintf("%d", conf.Port)})
 				}
 				if conf.Timeout > 0 {
 					p["--timeout"] = getFirstNoneEmptyString([]string{dropError(p.String("--timeout")), fmt.Sprintf("%d", conf.Timeout)})
 				}
+				if conf.Compression {
+					p["--compress"] = getFirstNoneEmptyString([]string{dropError(p.String("--compress")), conf.CompressMode})
+				}
+				if conf.Zerotext {
+					if b, err := p.Bool("--zerotext"); err == nil {
+						p["--zerotext"] = b || conf.Zerotext
+					}
+				}
+				if conf.Memory {
+					if b, err := p.Bool("--memory"); err == nil {
+						p["--memory"] = b || conf.Memory
+					}
+				}
+				if conf.Create {
+					if b, err := p.Bool("--create"); err == nil {
+						p["--create"] = b || conf.Create
+					}
+				}
+				if conf.NonLinearizable {
+					if b, err := p.Bool("--nonlinearizable"); err == nil {
+						p["--nonlinearizable"] = b || conf.NonLinearizable
+					}
+				}
 				p["--tls"] = getFirstNoneEmptyString([]string{dropError(p.String("--tls")), conf.Pem})
-				if conf.Secure == false {
+				if !conf.Secure {
 					p["--tls"] = "NO"
-				} else if conf.TlsInsecureSkipVerify == true {
+				} else if conf.TlsInsecureSkipVerify {
 					p["--tls"] = "SKIP"
 				}
 				p["--apikey"] = getFirstNoneEmptyString([]string{dropError(p.String("--apikey")), conf.ApiKey})
 				if conf.NoBlob {
-					p["--noblob"] = getFirstNoneEmptyString([]string{dropError(p.String("--noblob")), strconv.FormatBool(conf.NoBlob)})
+					if b, err := p.Bool("--noblob"); err == nil {
+						p["--noblob"] = b || conf.NoBlob
+					}
 				}
 				if conf.MaxData > 0 {
 					p["--maxdata"] = getFirstNoneEmptyString([]string{dropError(p.String("--maxdata")), fmt.Sprintf("%d", conf.MaxData)})
@@ -284,6 +320,9 @@ func parseParameters() (Parameter, error) {
 		p["--compress"] = getFirstNoneEmptyString([]string{dropError(p.String("--compress")), "NO"})
 		p["--tls"] = getFirstNoneEmptyString([]string{dropError(p.String("--tls")), "YES"})
 		p["--separator"] = getFirstNoneEmptyString([]string{dropError(p.String("--separator")), dropError(sqlitecloud.GetDefaultSeparatorForOutputFormat(outputformat)), "|"})
+		p["--maxdata"] = getFirstNoneEmptyString([]string{dropError(p.String("--maxdata")), "0"})
+		p["--maxrows"] = getFirstNoneEmptyString([]string{dropError(p.String("--maxrows")), "0"})
+		p["--maxrowset"] = getFirstNoneEmptyString([]string{dropError(p.String("--maxrowset")), "0"})
 
 		// Fix invalid(=unset) parameters, quotation & control-chars
 		for k, v := range p {
@@ -375,18 +414,22 @@ func main() {
 		// print( out, fmt.Sprintf( "%s %s, %s", long_name, version, copyright ), &parameter )
 
 		config := sqlitecloud.SQCloudConfig{
-			Host:         parameter.Host,
-			Port:         parameter.Port,
-			Username:     parameter.User,
-			Password:     parameter.Password,
-			Database:     parameter.Database,
-			Timeout:      time.Duration(parameter.Timeout) * time.Second,
-			CompressMode: parameter.Compress,
-			ApiKey:       parameter.ApiKey,
-			NoBlob:       parameter.NoBlob,
-			MaxData:      parameter.MaxData,
-			MaxRows:      parameter.MaxRows,
-			MaxRowset:    parameter.MaxRowset,
+			Host:            parameter.Host,
+			Port:            parameter.Port,
+			Username:        parameter.User,
+			Password:        parameter.Password,
+			Database:        parameter.Database,
+			Timeout:         time.Duration(parameter.Timeout) * time.Second,
+			CompressMode:    parameter.Compress,
+			Zerotext:        parameter.Zerotext,
+			Memory:          parameter.Memory,
+			Create:          parameter.Create,
+			NonLinearizable: parameter.NonLinearizable,
+			ApiKey:          parameter.ApiKey,
+			NoBlob:          parameter.NoBlob,
+			MaxData:         parameter.MaxData,
+			MaxRows:         parameter.MaxRows,
+			MaxRowset:       parameter.MaxRowset,
 		}
 
 		config.Secure, config.TlsInsecureSkipVerify, config.Pem = sqlitecloud.ParseTlsString(parameter.Tls)
@@ -514,7 +557,7 @@ func main() {
 					case ".timeout":
 						parameter.Timeout = getNextTokenValueAsInteger(out, parameter.Timeout, 10, tokens, &parameter)
 					case ".compress":
-						parameter.Compress = getNextTokenValueAsString(out, parameter.Compress, "NO", "|no|lz4|", tokens, &parameter)
+						parameter.Compress = getNextTokenValueAsString(out, parameter.Compress, sqlitecloud.CompressModeNo, "|no|lz4|", tokens, &parameter)
 						db.Compress(parameter.Compress)
 
 					case ".format":

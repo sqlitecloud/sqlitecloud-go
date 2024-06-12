@@ -18,6 +18,7 @@
 package test
 
 import (
+	"os"
 	"testing"
 
 	sqlitecloud "github.com/sqlitecloud/go-sdk"
@@ -27,8 +28,11 @@ const testDbnameSelectArray = "test-gosdk-selectarray-db.sqlite"
 
 func TestSelectArray(t *testing.T) {
 	// Server API test
+	connectionString, _ := os.LookupEnv("SQLITE_CONNECTION_STRING")
+	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
+	connectionString += "?apikey=" + apikey
 
-	config, err1 := sqlitecloud.ParseConnectionString(testConnectionString)
+	config, err1 := sqlitecloud.ParseConnectionString(connectionString)
 	if err1 != nil {
 		t.Fatal(err1.Error())
 	}
@@ -104,8 +108,11 @@ func TestSelectArray(t *testing.T) {
 
 func TestSelectArrayTableNameWithQuotes(t *testing.T) {
 	// Server API test
+	connectionString, _ := os.LookupEnv("SQLITE_CONNECTION_STRING")
+	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
+	connectionString += "?apikey=" + apikey
 
-	config, err1 := sqlitecloud.ParseConnectionString(testConnectionString)
+	config, err1 := sqlitecloud.ParseConnectionString(connectionString)
 	if err1 != nil {
 		t.Fatal(err1.Error())
 	}

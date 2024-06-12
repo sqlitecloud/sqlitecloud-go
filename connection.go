@@ -37,10 +37,16 @@ type SQCloudConfig struct {
 	Username              string
 	Password              string
 	Database              string
-	Timeout               time.Duration
-	CompressMode          string
-	Secure                bool
-	TlsInsecureSkipVerify bool
+	PasswordHashed        bool          // Password is hashed
+	Timeout               time.Duration // Optional query timeout passed directly to TLS socket
+	CompressMode          string        // eg: LZ4
+	Compression           bool          // Enable compression
+	Zerotext              bool          // Tell the server to zero-terminate strings
+	Memory                bool          // Database will be created in memory
+	Create                bool          // Create the database if it doesn't exist?
+	Secure                bool          // Connect using plain TCP port, without TLS encryption, NOT RECOMMENDED (insecure)
+	NonLinearizable       bool          // Request for immediate responses from the server node without waiting for linerizability guarantees
+	TlsInsecureSkipVerify bool          // Accept invalid TLS certificates (no_verify_certificate)
 	Pem                   string
 	ApiKey                string
 	NoBlob                bool // flag to tell the server to not send BLOB columns
@@ -68,6 +74,9 @@ type SQCloud struct {
 	ErrorOffset  int
 	ErrorMessage string
 }
+
+const CompressModeNo = "NO"
+const CompressModeLZ4 = "LZ4"
 
 const SQLiteCloudCA = "SQLiteCloudCA"
 
@@ -104,15 +113,20 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 		config.Password, _ = u.User.Password()
 		config.Database = strings.TrimPrefix(u.Path, "/")
 		config.Timeout = 0
-		config.CompressMode = "NO"
+		config.Compression = false
+		config.CompressMode = CompressModeNo
+		config.Zerotext = false
+		config.Memory = false
+		config.Create = false
 		config.Secure = true
+		config.NonLinearizable = false
 		config.TlsInsecureSkipVerify = false
 		config.Pem = ""
-		config.ApiKey = ""
 		config.NoBlob = false
 		config.MaxData = 0
 		config.MaxRows = 0
 		config.MaxRowset = 0
+		config.ApiKey = ""
 
 		sPort := strings.TrimSpace(u.Port())
 		if len(sPort) > 0 {
@@ -133,6 +147,42 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 
 			case "compress":
 				config.CompressMode = strings.ToUpper(lastLiteral)
+				if config.CompressMode == CompressModeLZ4 {
+					config.Compression = true
+				}
+			case "compression":
+				if b, err := parseBool(lastLiteral, config.Compression); err == nil && b {
+					config.Compression = true
+					config.CompressMode = CompressModeLZ4
+				}
+			case "zerotext":
+				if b, err := parseBool(lastLiteral, config.Zerotext); err == nil {
+					config.Zerotext = b
+				}
+			case "memory":
+				if b, err := parseBool(lastLiteral, config.Memory); err == nil {
+					config.Memory = b
+				}
+			case "create":
+				if b, err := parseBool(lastLiteral, config.Create); err == nil {
+					config.Create = b
+				}
+			case "secure":
+				if b, err := parseBool(lastLiteral, config.Secure); err == nil {
+					config.Secure = b
+				}
+			case "insecure":
+				if b, err := parseBool(lastLiteral, config.Secure); err == nil {
+					config.Secure = !b
+				}
+			case "non_linearizable", "nonlinearizable":
+				if b, err := parseBool(lastLiteral, config.NonLinearizable); err == nil {
+					config.NonLinearizable = b
+				}
+			case "no_verify_certificate":
+				if b, err := parseBool(lastLiteral, config.TlsInsecureSkipVerify); err == nil {
+					config.TlsInsecureSkipVerify = b
+				}
 			case "tls":
 				config.Secure, config.TlsInsecureSkipVerify, config.Pem = ParseTlsString(lastLiteral)
 			case "apikey":
@@ -210,8 +260,8 @@ func (this *SQCloud) CheckConnectionParameter() error {
 		return errors.New(fmt.Sprintf("Invalid Timeout (%s)", this.Timeout.String()))
 	}
 
-	switch strings.ToUpper(this.CompressMode) {
-	case "NO", "LZ4":
+	switch this.CompressMode {
+	case CompressModeNo, CompressModeLZ4:
 	default:
 		return errors.New(fmt.Sprintf("Invalid compression method (%s)", this.CompressMode))
 	}
@@ -340,45 +390,7 @@ func (this *SQCloud) reconnect() error {
 		}
 	}
 
-	commands := ""
-	args := []interface{}{}
-
-	if strings.TrimSpace(this.Username) != "" {
-		c, a := authCommand(this.Username, this.Password)
-		commands += c
-		args = append(args, a...)
-
-	} else if strings.TrimSpace(this.ApiKey) != "" {
-		c, a := authWithKeyCommand(this.ApiKey)
-		commands += c
-		args = append(args, a...)
-	}
-
-	if strings.TrimSpace(this.Database) != "" {
-		c, a := useDatabaseCommand(this.Database)
-		commands += c
-		args = append(args, a...)
-	}
-
-	if this.NoBlob {
-		commands += noblobCommand(this.NoBlob)
-	}
-
-	if this.MaxData > 0 {
-		commands += maxdataCommand(this.MaxData)
-	}
-
-	if this.MaxRows > 0 {
-		commands += maxrowsCommand(this.MaxRows)
-	}
-
-	if this.MaxRowset > 0 {
-		commands += maxrowsetCommand(this.MaxRowset)
-	}
-
-	if this.CompressMode != "NO" {
-		commands += compressCommand(this.CompressMode)
-	}
+	commands, args := connectionCommands(this.SQCloudConfig)
 
 	if commands != "" {
 		if len(args) > 0 {
@@ -421,6 +433,53 @@ func (this *SQCloud) Close() error {
 	return nil
 }
 
+func connectionCommands(config SQCloudConfig) (string, []interface{}) {
+	buffer := ""
+	args := []interface{}{}
+
+	// it must be executed before authentication command
+	if config.NonLinearizable {
+		buffer += nonlinearizableCommand(config.NonLinearizable)
+	}
+
+	if config.ApiKey != "" {
+		c, a := authWithKeyCommand(config.ApiKey)
+		buffer += c
+		args = append(args, a...)
+	}
+
+	if config.Username != "" && config.Password != "" {
+		c, a := authCommand(config.Username, config.Password, config.PasswordHashed)
+		buffer += c
+		args = append(args, a...)
+	}
+
+	if config.Database != "" {
+		create := config.Create && !config.Memory
+		c, a := useDatabaseCommand(config.Database, create)
+		buffer += c
+		args = append(args, a...)
+	}
+
+	buffer += compressCommand(config.CompressMode)
+
+	if config.Zerotext {
+		buffer += zerotextCommand(config.Zerotext)
+	}
+
+	if config.NoBlob {
+		buffer += noblobCommand(config.NoBlob)
+	}
+
+	buffer += maxdataCommand(config.MaxData)
+
+	buffer += maxrowsCommand(config.MaxRows)
+
+	buffer += maxrowsetCommand(config.MaxRowset)
+
+	return buffer, args
+}
+
 func noblobCommand(NoBlob bool) string {
 	if NoBlob {
 		return "SET CLIENT KEY NOBLOB TO 1;"
@@ -443,12 +502,28 @@ func maxrowsetCommand(v int) string {
 
 func compressCommand(CompressMode string) string {
 	switch compression := strings.ToUpper(CompressMode); {
-	case compression == "NO":
+	case compression == CompressModeNo:
 		return "SET CLIENT KEY COMPRESSION TO 0;"
-	case compression == "LZ4":
+	case compression == CompressModeLZ4:
 		return "SET CLIENT KEY COMPRESSION TO 1;"
 	default:
 		return ""
+	}
+}
+
+func nonlinearizableCommand(NonLinearizable bool) string {
+	if NonLinearizable {
+		return "SET CLIENT KEY NONLINEARIZABLE TO 1;"
+	} else {
+		return "SET CLIENT KEY NONLINEARIZABLE TO 0;"
+	}
+}
+
+func zerotextCommand(Zerotext bool) string {
+	if Zerotext {
+		return "SET CLIENT KEY ZEROTEXT TO 1;"
+	} else {
+		return "SET CLIENT KEY ZEROTEXT TO 0;"
 	}
 }
 
