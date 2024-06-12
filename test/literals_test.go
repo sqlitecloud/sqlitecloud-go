@@ -18,6 +18,7 @@
 package test
 
 import (
+	"os"
 	"testing"
 
 	sqlitecloud "github.com/sqlitecloud/go-sdk"
@@ -31,7 +32,9 @@ func TestLiterals(t *testing.T) {
 	var err error
 
 	// start := time.Now()
-	if db, err = sqlitecloud.Connect(testConnectionString); err != nil {
+	connectionString, _ := os.LookupEnv("SQLITE_CONNECTION_STRING")
+	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
+	if db, err = sqlitecloud.Connect(connectionString + "?apikey=" + apikey); err != nil {
 		t.Fatal("CONNECT: ", err.Error())
 	}
 	defer db.Close()

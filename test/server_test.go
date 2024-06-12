@@ -19,6 +19,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -28,19 +29,24 @@ import (
 const testDbnameServer = "test-gosdk-server-db.sqlite"
 
 func TestServer(t *testing.T) {
-	db, err := sqlitecloud.Connect(testConnectionString)
+	connectionString, _ := os.LookupEnv("SQLITE_CONNECTION_STRING")
+	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
+	db, err := sqlitecloud.Connect(connectionString + "?apikey=" + apikey)
 	if err != nil {
 		t.Fatal("Connect: ", err.Error())
 	}
 
 	// Checking wrong AUTH
-	if err := db.Auth(testUsername, "wrong password"); err == nil {
+	username, _ := os.LookupEnv("SQLITE_USER")
+	password, _ := os.LookupEnv("SQLITE_PASSWORD")
+
+	if err := db.Auth(username, "wrong password"); err == nil {
 		t.Fatal("AUTH: Expected authorization failed, got authorized")
 	}
 	db.Close()
 
 	// reopen the connection (it was closed because of the auth command with wrong credentials)
-	db, err = sqlitecloud.Connect(testConnectionString)
+	db, err = sqlitecloud.Connect(connectionString + "?apikey=" + apikey)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -52,7 +58,7 @@ func TestServer(t *testing.T) {
 	}
 
 	// Checking AUTH
-	if err := db.Auth(testUsername, testPassword); err != nil {
+	if err := db.Auth(username, password); err != nil {
 		t.Fatal("Checking AUTH: ", err.Error())
 	}
 

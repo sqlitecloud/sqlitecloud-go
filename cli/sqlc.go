@@ -514,7 +514,7 @@ func main() {
 					case ".timeout":
 						parameter.Timeout = getNextTokenValueAsInteger(out, parameter.Timeout, 10, tokens, &parameter)
 					case ".compress":
-						parameter.Compress = getNextTokenValueAsString(out, parameter.Compress, "NO", "|no|lz4|", tokens, &parameter)
+						parameter.Compress = getNextTokenValueAsString(out, parameter.Compress, sqlitecloud.CompressModeNo, "|no|lz4|", tokens, &parameter)
 						db.Compress(parameter.Compress)
 
 					case ".format":

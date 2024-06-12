@@ -246,13 +246,18 @@ func (this *SQCloud) ListDatabaseConnections(Database string) ([]SQCloudConnecti
 
 // Auth Functions
 
-func authCommand(Username string, Password string) (string, []interface{}) {
-	return "AUTH USER ? PASSWORD ?;", []interface{}{Username, Password}
+func authCommand(Username string, Password string, IsPasswordHashed bool) (string, []interface{}) {
+	command := "PASSWORD"
+	if IsPasswordHashed {
+		command = "HASH"
+	}
+
+	return fmt.Sprintf("AUTH USER ? %s ?;", command), []interface{}{Username, Password}
 }
 
 // Auth - INTERNAL SERVER COMMAND: Authenticates User with the given credentials.
 func (this *SQCloud) Auth(Username string, Password string) error {
-	return this.ExecuteArray(authCommand(Username, Password))
+	return this.ExecuteArray(authCommand(Username, Password, false))
 }
 
 func authWithKeyCommand(Key string) (string, []interface{}) {
@@ -318,8 +323,12 @@ func (this *SQCloud) GetDatabase() (string, error) {
 	return "", err
 }
 
-func useDatabaseCommand(Database string) (string, []interface{}) {
-	return "USE DATABASE ?;", []interface{}{Database}
+func useDatabaseCommand(Database string, create bool) (string, []interface{}) {
+	command := "USE DATABASE ?;"
+	if create {
+		command = "CREATE DATABASE ? IF NOT EXISTS;"
+	}
+	return command, []interface{}{Database}
 }
 
 // UseDatabase - INTERNAL SERVER COMMAND: Selects the specified Database for usage.
@@ -327,7 +336,7 @@ func useDatabaseCommand(Database string) (string, []interface{}) {
 // An error is returned if the specified Database was not found or the user has not the necessary access rights to work with this Database.
 func (this *SQCloud) UseDatabase(Database string) error {
 	this.Database = Database
-	return this.ExecuteArray(useDatabaseCommand(Database))
+	return this.ExecuteArray(useDatabaseCommand(Database, false))
 }
 
 // UseDatabase - INTERNAL SERVER COMMAND: Releases the actual Database.
