@@ -317,7 +317,7 @@ func parseParameters() (Parameter, error) {
 		p["--host"] = getFirstNoneEmptyString([]string{dropError(p.String("--host")), "localhost"})
 		p["--port"] = getFirstNoneEmptyString([]string{dropError(p.String("--port")), "8860"})
 		p["--timeout"] = getFirstNoneEmptyString([]string{dropError(p.String("--timeout")), "10"})
-		p["--compress"] = getFirstNoneEmptyString([]string{dropError(p.String("--compress")), "NO"})
+		p["--compress"] = getFirstNoneEmptyString([]string{dropError(p.String("--compress")), sqlitecloud.CompressModeLZ4})
 		p["--tls"] = getFirstNoneEmptyString([]string{dropError(p.String("--tls")), "YES"})
 		p["--separator"] = getFirstNoneEmptyString([]string{dropError(p.String("--separator")), dropError(sqlitecloud.GetDefaultSeparatorForOutputFormat(outputformat)), "|"})
 		p["--maxdata"] = getFirstNoneEmptyString([]string{dropError(p.String("--maxdata")), "0"})
@@ -420,6 +420,7 @@ func main() {
 			Password:        parameter.Password,
 			Database:        parameter.Database,
 			Timeout:         time.Duration(parameter.Timeout) * time.Second,
+			Compression:     parameter.Compress == sqlitecloud.CompressModeLZ4,
 			CompressMode:    parameter.Compress,
 			Zerotext:        parameter.Zerotext,
 			Memory:          parameter.Memory,

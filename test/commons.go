@@ -4,8 +4,10 @@ import (
 	"flag"
 	"log"
 	"os"
+	"testing"
 
 	"github.com/joho/godotenv"
+	sqlitecloud "github.com/sqlitecloud/go-sdk"
 )
 
 func init() {
@@ -24,4 +26,18 @@ func contains[T comparable](s []T, e T) bool {
 		}
 	}
 	return false
+}
+
+func setupDatabase(t *testing.T) (*sqlitecloud.SQCloud, func()) {
+	connectionString, _ := os.LookupEnv("SQLITE_CONNECTION_STRING")
+	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
+
+	db, err := sqlitecloud.Connect(connectionString + "?apikey=" + apikey)
+	if err != nil {
+		t.Fatal("Connection error: ", err.Error())
+	}
+
+	return db, func() {
+		db.Close()
+	}
 }

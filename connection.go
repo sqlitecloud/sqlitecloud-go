@@ -113,8 +113,8 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 		config.Password, _ = u.User.Password()
 		config.Database = strings.TrimPrefix(u.Path, "/")
 		config.Timeout = 0
-		config.Compression = false
-		config.CompressMode = CompressModeNo
+		config.Compression = true // enabled by default
+		config.CompressMode = CompressModeLZ4
 		config.Zerotext = false
 		config.Memory = false
 		config.Create = false
@@ -146,14 +146,18 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 				}
 
 			case "compress":
-				config.CompressMode = strings.ToUpper(lastLiteral)
-				if config.CompressMode == CompressModeLZ4 {
-					config.Compression = true
+				mode := strings.ToUpper(lastLiteral)
+				if mode == CompressModeNo {
+					config.CompressMode = CompressModeNo
+					config.Compression = false
+				} else if enable, err := parseBool(mode, config.Compression); err == nil && !enable {
+					config.CompressMode = CompressModeNo
+					config.Compression = false
 				}
 			case "compression":
-				if b, err := parseBool(lastLiteral, config.Compression); err == nil && b {
-					config.Compression = true
-					config.CompressMode = CompressModeLZ4
+				if enable, err := parseBool(lastLiteral, config.Compression); err == nil && !enable {
+					config.Compression = false
+					config.CompressMode = CompressModeNo
 				}
 			case "zerotext":
 				if b, err := parseBool(lastLiteral, config.Zerotext); err == nil {
@@ -239,12 +243,12 @@ func (this *SQCloud) CheckConnectionParameter() error {
 		return fmt.Errorf("Invalid hostname (%s)", this.Host)
 	}
 
-	ip := net.ParseIP(this.Host)
-	if ip == nil {
-		if _, err := net.LookupHost(this.Host); err != nil {
-			return errors.New(fmt.Sprintf("Can't resolve hostname (%s)", this.Host))
-		}
-	}
+	// ip := net.ParseIP(this.Host)
+	// if ip == nil {
+	// 	if _, err := net.LookupHost(this.Host); err != nil {
+	// 		return errors.New(fmt.Sprintf("Can't resolve hostname (%s)", this.Host))
+	// 	}
+	// }
 
 	if this.Port == 0 {
 		this.Port = 8860
