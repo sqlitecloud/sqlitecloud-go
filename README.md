@@ -10,14 +10,14 @@ The SQLite Cloud Client SDK for Go (sqlitecloud/go-sdk) is the Go Programming La
 1. Import the package in your Go source code:
 
     ```go
-    import sqlitecloud "github.com/sqlitecloud/go-sdk"
+    import sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
     ```
 
 2. Download the package, and run the [`go mod tidy` command](https://go.dev/ref/mod#go-mod-tidy) to synchronize your module's dependencies:
 
     ```
     $ go mod tidy 
-    go: downloading github.com/sqlitecloud/go-sdk v1.0.0
+    go: downloading github.com/sqlitecloud/sqlitecloud-go v1.0.0
     ```
 
 3. Connect to a SQLite Cloud database with a valid [connection string](#get-a-connection-string):
@@ -41,7 +41,7 @@ import (
     "fmt"
     "strings"
 
-    sqlitecloud "github.com/sqlitecloud/go-sdk"
+    sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
 )
 
 const connectionString = "sqlitecloud://admin:password@host.sqlite.cloud:8860/dbname.sqlite"
@@ -81,4 +81,4 @@ To get a valid connection string, follow these instructions:
 
 ## API Documentation
 
-The complete documentation of the sqlitecloud/go-sdk library is available at: https://pkg.go.dev/github.com/sqlitecloud/go-sdk
+The complete documentation of the sqlitecloud/go-sdk library is available at: https://pkg.go.dev/github.com/sqlitecloud/sqlitecloud-go

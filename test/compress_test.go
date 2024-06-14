@@ -24,7 +24,7 @@ import (
 	"os"
 	"testing"
 
-	sqlitecloud "github.com/sqlitecloud/go-sdk"
+	sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
 )
 
 const testDbnameCompress = "test-gosdk-compress-db.sqlite"

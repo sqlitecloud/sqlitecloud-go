@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	sqlitecloud "github.com/sqlitecloud/go-sdk"
+	sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
 	"github.com/stretchr/testify/assert"
 )
 

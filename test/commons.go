@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
-	sqlitecloud "github.com/sqlitecloud/go-sdk"
+	sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
 )
 
 func init() {

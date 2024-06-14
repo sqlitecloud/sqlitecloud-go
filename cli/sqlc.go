@@ -18,7 +18,7 @@
 package main
 
 import (
-	sqlitecloud "github.com/sqlitecloud/go-sdk"
+	sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
 
 	"bufio"
 	"errors"
