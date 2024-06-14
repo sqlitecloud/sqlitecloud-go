@@ -28,8 +28,6 @@ import (
 )
 
 const testDbnameCompress = "test-gosdk-compress-db.sqlite"
-const testCompressKey = "compress"
-const testCompressValue = "LZ4"
 
 func TestCompress(t *testing.T) {
 	connectionString, _ := os.LookupEnv("SQLITE_CONNECTION_STRING")
@@ -38,7 +36,7 @@ func TestCompress(t *testing.T) {
 
 	url, err := url.Parse(connectionString)
 	values := url.Query()
-	values.Add(testCompressKey, testCompressValue)
+	values.Add("compress", sqlitecloud.CompressModeLZ4)
 	url.RawQuery = values.Encode()
 
 	connstring := url.String()
