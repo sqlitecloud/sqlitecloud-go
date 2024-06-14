@@ -502,16 +502,12 @@ func main() {
 			prompt = "\\u@\\H:\\p/\\d > "
 
 			refreshDB := false
-			if parameter.Database != "" {
-				refreshDB = true
-			}
 
 		Loop:
 			for {
 				out.Flush()
 				if refreshDB {
 					db.Database, _ = db.GetDatabase()
-					go func() { dynamic_tokens = db.GetAutocompleteTokens() }() // Update the dynamic tokens in the background...
 				}
 
 				renderdPrompt := prompt

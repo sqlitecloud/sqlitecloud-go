@@ -463,11 +463,17 @@ func connectionCommands(config SQCloudConfig) (string, []interface{}) {
 		buffer += noblobCommand(config.NoBlob)
 	}
 
-	buffer += maxdataCommand(config.MaxData)
+	if config.MaxData > 0 {
+		buffer += maxdataCommand(config.MaxData)
+	}
 
-	buffer += maxrowsCommand(config.MaxRows)
+	if config.MaxRows > 0 {
+		buffer += maxrowsCommand(config.MaxRows)
+	}
 
-	buffer += maxrowsetCommand(config.MaxRowset)
+	if config.MaxRowset > 0 {
+		buffer += maxrowsetCommand(config.MaxRowset)
+	}
 
 	return buffer, args
 }
