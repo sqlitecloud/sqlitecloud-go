@@ -20,7 +20,8 @@ func TestParseConnectionString(t *testing.T) {
 		Password:              "",
 		Database:              "mydatabase",
 		Timeout:               time.Duration(11) * time.Second,
-		CompressMode:          "YES",
+		Compression:           true,
+		CompressMode:          sqlitecloud.CompressModeLZ4,
 		Secure:                true,
 		TlsInsecureSkipVerify: false,
 		Pem:                   "",
@@ -50,7 +51,8 @@ func TestParseConnectionStringWithAPIKey(t *testing.T) {
 		Password:              "pass",
 		Database:              "dbname",
 		Timeout:               time.Duration(11) * time.Second,
-		CompressMode:          "TRUE",
+		Compression:           true,
+		CompressMode:          sqlitecloud.CompressModeLZ4,
 		Secure:                true,
 		TlsInsecureSkipVerify: false,
 		Pem:                   "",
@@ -104,8 +106,8 @@ func TestParseConnectionStringWithParameters(t *testing.T) {
 		{
 			param:         "compression",
 			configParam:   "Compression",
-			value:         "true",
-			expectedValue: true,
+			value:         "false",
+			expectedValue: false,
 		},
 		{
 			param:         "zerotext",
@@ -184,6 +186,104 @@ func TestParseConnectionStringWithParameters(t *testing.T) {
 			configParam:   "ApiKey",
 			value:         "abc123",
 			expectedValue: "abc123",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.param, func(t *testing.T) {
+			config, err := sqlitecloud.ParseConnectionString("sqlitecloud://myhost.sqlite.cloud/mydatabase?" + tt.param + "=" + tt.value)
+
+			assert.NoError(t, err)
+
+			actualValue := reflect.ValueOf(*config).FieldByName(tt.configParam)
+			if !actualValue.IsValid() {
+				t.Fatalf("Field %s not found in config", tt.configParam)
+			} else {
+				assert.Equal(t, tt.expectedValue, actualValue.Interface())
+			}
+		})
+	}
+}
+
+func TestParseConnectionStringCompressionCombinations(t *testing.T) {
+	tests := []struct {
+		param         string
+		configParam   string
+		value         string
+		expectedValue any
+	}{
+		{
+			param:         "compression",
+			configParam:   "Compression",
+			value:         "false",
+			expectedValue: false,
+		},
+		{
+			param:         "compression",
+			configParam:   "Compression",
+			value:         "disabled",
+			expectedValue: false,
+		},
+		{
+			param:       "compression",
+			configParam: "Compression",
+			// value not supported
+			value:         "no",
+			expectedValue: true,
+		},
+		{
+			param:         "compression",
+			configParam:   "Compression",
+			value:         "0",
+			expectedValue: false,
+		},
+		{
+			param:         "compression",
+			configParam:   "Compression",
+			value:         "true",
+			expectedValue: true,
+		},
+		{
+			param:         "compression",
+			configParam:   "Compression",
+			value:         "enabled",
+			expectedValue: true,
+		},
+		{
+			param:         "compression",
+			configParam:   "Compression",
+			value:         "yes",
+			expectedValue: true,
+		},
+		{
+			param:         "compression",
+			configParam:   "Compression",
+			value:         "1",
+			expectedValue: true,
+		},
+		{
+			param:         "compress",
+			configParam:   "CompressMode",
+			value:         "lz4",
+			expectedValue: sqlitecloud.CompressModeLZ4,
+		},
+		{
+			param:         "compress",
+			configParam:   "Compression",
+			value:         "lz4",
+			expectedValue: true,
+		},
+		{
+			param:         "compress",
+			configParam:   "CompressMode",
+			value:         "no",
+			expectedValue: sqlitecloud.CompressModeNo,
+		},
+		{
+			param:         "compress",
+			configParam:   "Compression",
+			value:         "no",
+			expectedValue: false,
 		},
 	}
 

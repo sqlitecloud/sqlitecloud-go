@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	sqlitecloud "github.com/sqlitecloud/go-sdk"
+	"github.com/stretchr/testify/assert"
 )
 
 const testDbnameServer = "test-gosdk-server-db.sqlite"
@@ -212,4 +213,17 @@ func TestServer(t *testing.T) {
 	//  fail( err.Error() )
 	// }
 	// fmt.Printf( "ok.\r\n" )
+}
+
+func TestCompressionEnabledByDefault(t *testing.T) {
+	db, cleaup := setupDatabase(t)
+	defer cleaup()
+
+	result, _ := db.Select("GET CLIENT KEY COMPRESSION")
+	value, err := result.GetString()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	assert.Equal(t, "1", value)
 }
