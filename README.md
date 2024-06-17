@@ -16,7 +16,7 @@ The SQLite Cloud Client SDK for Go (sqlitecloud/go-sdk) is the Go Programming La
 2. Download the package, and run the [`go mod tidy` command](https://go.dev/ref/mod#go-mod-tidy) to synchronize your module's dependencies:
 
     ```
-    $ go mod tidy 
+    $ go mod tidy
     go: downloading github.com/sqlitecloud/sqlitecloud-go v1.0.0
     ```
 

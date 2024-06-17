@@ -169,12 +169,12 @@ General Options:
   -d, --dbname NAME        Use database NAME
   -b, --bail               Stop after hitting an error
   -?, --help               Show this screen
-  --version                Display version information   
-  
-Output Format Options:  
+  --version                Display version information
+
+Output Format Options:
   -o, --output FILE        Switch to BATCH mode, execute SQL Commands and send output to FILE, then exit.
                            In BATCH mode, the default output format is switched to QUOTE.
-                           
+
   --echo                   Disables --quiet, print command(s) before execution
   --quiet                  Disables --echo, run command(s) quietly (no messages, only query output)
   --noheader               Turn headers off
@@ -209,16 +209,16 @@ Connection Options:
 .separator TEXT      Set output column separator [default: "<auto>"]
 .format [LIST|CSV|QUOTE|TABS|LINE|JSON|HTML|XML|MARKDOWN|TABLE|BOX]
                      Specify the Output mode [default: BOX]
-.width [-1|0|<num>]  Sets the maximum allowed query result length per line to the  
+.width [-1|0|<num>]  Sets the maximum allowed query result length per line to the
                      terminal width(-1), unlimited (0) or any other width(<num>) [default: -1]
 .timeout             Set Timeout for network operations to SECS seconds [default: 10]
 .compress            Use line compression [default: NO]
 .exit, .quit         Exit this program
 
 If no parameter is specified, then the default value is used as the parameter value.
-Boolean settings are toggled if no parameter is specified. 
+Boolean settings are toggled if no parameter is specified.
 
-hostname:X > 
+hostname:X >
 
 ```
 
@@ -227,10 +227,10 @@ hostname:X >
 ### Starting a new session
 ```console
 ./bin/sqlc --host=hostname --dbname=X --tls=INTERN
-   _____     
+   _____
   /    /     SQLite Cloud Command Line Application, version 1.0.1
  / ___/ /    (c) 2021 by SQLite Cloud Inc.
- \  ___/ /   
+ \  ___/ /
   \_ ___/    Enter ".help" for usage hints.
 
 hostname:X >
@@ -250,7 +250,7 @@ hostname:X > SELECT * FROM Dummy;
 └─────┴───────────┴──────────┴───────┴──────────┴─────────────────────┘
 Rows: 4 - Cols: 6: 282 Bytes Time: 86.43071ms
 
-hostname:X > 
+hostname:X >
 
 ```
 ### DELETE'ing a row
@@ -258,7 +258,7 @@ hostname:X >
 hostname:X > DELETE FROM Dummy WHERE ID = 372;
 OK
 
-hostname:X > 
+hostname:X >
 
 ```
 
@@ -295,7 +295,7 @@ hostname:X > SELECT * FROM Dummy;
 </resultset>
 Rows: 3 - Cols: 6: 229 Bytes Time: 82.762014ms
 
-hostname:X > 
+hostname:X >
 
 ```
 ### Changing the outformat back
@@ -308,7 +308,7 @@ hostname:X > .format table
  hostname:X > SELECT * FROM Dummy;
 +-----+-----------+----------+-------+----------+---------------
 ------+
-| ID  | FirstName | LastName |  ZIP  |   City   |       Address 
+| ID  | FirstName | LastName |  ZIP  |   City   |       Address
       |
 +-----+-----------+----------+-------+----------+---------------
 ------+
@@ -335,7 +335,7 @@ y":"Poxdorf","Address":"Langholzstr. 4",},
 ]
 Rows: 3 - Cols: 6: 229 Bytes Time: 87.014696ms
 
-hostname:X > 
+hostname:X >
 
 ```
 You can see a nasty line break in the middle of the result line that can easily ruin the screen reading experience. To avoid this annoyance, sqlc build in line trucation mechanism trims its output line in a terminal session by default. The result looks like this:
@@ -360,10 +360,10 @@ hostname:X > SELECT * FROM Dummy;
 ]
 Rows: 3 - Cols: 6: 229 Bytes Time: 88.874433ms
 
-hostname:X > 
+hostname:X >
 ```
 
-If an output line was trimed to a certain width, the truncation can easily be spoted by the `…` character at the very end of a line. In batch mode, all output is sent to an output file, no line truncation will occure. You can switch off this autotrunction behaviour with a `.width 0` command. To switch back to auto truncation, use `.width -1`. Truncation to any other width is also possible with, for exampel a `.width 35` command. 
+If an output line was trimed to a certain width, the truncation can easily be spoted by the `…` character at the very end of a line. In batch mode, all output is sent to an output file, no line truncation will occure. You can switch off this autotrunction behaviour with a `.width 0` command. To switch back to auto truncation, use `.width -1`. Truncation to any other width is also possible with, for exampel a `.width 35` command.
 
 ### Using Autocomplete
 To use the build in autocomplete feature, use the [TAB] key. The [TAB] key will try to guess what SQL command you was trying to use and autocomplete this SQL command for you. If autocomplete has guessed the wrong command, keep pressing [TAB] until the right command shows up. The Autocomplete knows all available SQLite Cloud server and SQLite Cloud SQL commands and functions. If you have selected a database (`USE DATABASE ...`), autocomplete will also help you with the Table and Colum names. "UPDATING'ing some data" shows a simple example session:
@@ -371,7 +371,7 @@ To use the build in autocomplete feature, use the [TAB] key. The [TAB] key will 
 ### UPDATING'ing some data
 ```console
 hostname:X > sel[TAB]
-hostname:X > SELECT 
+hostname:X > SELECT
 hostname:X > SELECT Fi[TAB]
 hostname:X > SELECT FirstName
 hostname:X > SELECT FirstName, Dum[TAB][TAB][TAB][TAB]
@@ -391,7 +391,7 @@ Rows: 3 - Cols: 2: 74 Bytes Time: 81.865386ms
 hostname:X > up[TAB]
 hostname:X > UPDATE D[TAB]
 hostname:X > UPDATE Dummy SET La[TAB]
-hostname:X > UPDATE Dummy SET LastName 
+hostname:X > UPDATE Dummy SET LastName
 hostname:X > UPDATE Dummy SET LastName = "ONE" WH[TAB]
 hostname:X > UPDATE Dummy SET LastName = "ONE" WHERE id=369[RETURN]
 OK
@@ -406,7 +406,7 @@ hostname:X > SELECT * FROM Dummy;
 └─────┴───────────┴──────────┴───────┴──────────┴─────────────────────┘
 Rows: 3 - Cols: 6: 229 Bytes Time: 82.797135ms
 
-hostname:X > 
+hostname:X >
 ```
 
 ### Setting the prompt

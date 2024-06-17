@@ -6,7 +6,7 @@ Enter ".help" for usage hints.
 sqlite> SELECT * FROM Dummy;
 Andreas|Langholzstraße |91099
 Werner|Raiffeisenstr. 4|96145
-                    
+
 #
 
 sqlite3 -csv test.db
@@ -41,7 +41,7 @@ SQLite version 3.35.4 2021-04-02 15:20:15
 Enter ".help" for usage hints.
 sqlite> SELECT * FROM Dummy;
   Names = Andreas
-Address = Langholzstraße 
+Address = Langholzstraße
     ZIP = 91099
 
   Names = Werner
@@ -108,7 +108,7 @@ sqlite> SELECT * FROM Dummy;
 │ Andreas │ Langholzstraße   │ 91099 │
 │ Werner  │ Raiffeisenstr. 4 │ 96145 │
 └─────────┴──────────────────┴───────┘
- 
+
 #
 
 sqlite3 -column test.db

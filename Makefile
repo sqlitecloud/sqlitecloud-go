@@ -1,7 +1,7 @@
 GOPATH		= $(shell go env GOPATH)
 
 # Test SDK
-test:	
+test:
 	cd test; go test -v
 
 # GO SDK
@@ -11,15 +11,15 @@ sdk:	*.go
 # CLI App
 $(GOPATH)/bin/sqlc:	*.go cli/sqlc.go
 	cd cli; go build -o $(GOPATH)/bin/sqlc
-	
+
 cli: $(GOPATH)/bin/sqlc
 
 github:
-	open https://github.com/sqlitecloud/sqlitecloud-go 
-	
+	open https://github.com/sqlitecloud/sqlitecloud-go
+
 diff:
 	git difftool
-	
+
 
 # gosec
 gosec:
@@ -40,15 +40,15 @@ endif
 
 doc:	godoc
 ifeq ($(wildcard ./src),)
-	ln -s . src			
+	ln -s . src
 endif
 	@echo "Hit CRTL-C to stop the documentation server..."
 	@( sleep 1 && open http://localhost:6060/pkg/github.com/sqlitecloud/sqlitecloud-go/ ) &
 	@$(GOPATH)/bin/godoc -http=:6060 -index -play
 
 clean:
-	rm -rf $(GOPATH)/bin/sqlc* 
+	rm -rf $(GOPATH)/bin/sqlc*
 
 all: sdk cli test
 
-.PHONY: test sdk 
+.PHONY: test sdk
