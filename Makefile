@@ -1,8 +1,15 @@
 GOPATH		= $(shell go env GOPATH)
 
+setup-ide:
+	pre-commit install
+	go install golang.org/x/tools/cmd/goimports@latest
+
 # Test SDK
 test:
-	cd test; go test -v
+	cd test; go test -v .
+
+test-codecov:
+	cd test; go test -v -race -coverprofile=coverage.txt -covermode=atomic .
 
 # GO SDK
 sdk:	*.go

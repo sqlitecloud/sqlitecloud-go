@@ -34,7 +34,7 @@ func TestCompress(t *testing.T) {
 	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
 	connectionString += "?apikey=" + apikey
 
-	url, err := url.Parse(connectionString)
+	url, _ := url.Parse(connectionString)
 	values := url.Query()
 	values.Add("compress", sqlitecloud.CompressModeLZ4)
 	url.RawQuery = values.Encode()
