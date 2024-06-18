@@ -34,9 +34,11 @@ jobs:
       with:
         version: ${{ steps.last-version.outputs.tag }}
         bump: ${{ inputs.choice }}
-    - name: Create tag as version for the package on pkg.go.dev
+    - name: Create tag as version for the package
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "GitHub Actions"
         git tag ${{ steps.bump-version.outputs.version }}
         git push origin ${{ steps.bump-version.outputs.version }}
+    - name: Publish on pkg.go.dev
+      run: GOPROXY=proxy.golang.org go list -m github.com/sqlitecloud/sqlitecloud-go@${{ steps.bump-version.outputs.version }}
