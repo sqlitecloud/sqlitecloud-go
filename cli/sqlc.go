@@ -74,13 +74,13 @@ General Options:
 Output Format Options:
   -o, --output FILE        Switch to BATCH mode, execute SQL Commands and send output to FILE, then exit.
                            In BATCH mode, the default output format is switched to QUOTE.
-
+  
   --echo                   Disables --quiet, print command(s) before execution
   --quiet                  Disables --echo, run command(s) quietly (no messages, only query output)
   --noheader               Turn headers off
-  --nullvalue TEXT         Set text string for NULL values [default: "NULL"]
+  --nullvalue TEXT         Set text string for NULL values [default: "NULL"]
   --newline SEP            Set output row separator [default: "\r\n"]
-  --separator SEP          Set output column separator [default::"|"]
+  --separator SEP          Set output column separator [default: "|"]
   --format (LIST|CSV|QUOTE|TABS|LINE|JSON|HTML|XML|MARKDOWN|TABLE|BOX)
                            Specify the Output mode [default::BOX]
 
