@@ -60,26 +60,26 @@ func (this *Chunk) Uncompress() error {
 	var err error
 
 	var hStartIndex uint64 = 1 // Index of the start of the uncompressed header in chunk (*0 NROWS NCOLS ...)
-	var zStartIndex uint64 = 0 // Index of the start of the compressed buffer in this chunk (<Compressed DATA...>)
+	var zStartIndex uint64     // Index of the start of the compressed buffer in this chunk (<Compressed DATA...>)
 
-	var LEN uint64 = 0
-	var lLEN uint64 = 0
+	var LEN uint64
+	var lLEN uint64
 
-	var COMPRESSED uint64 = 0
-	var cLEN uint64 = 0
+	var COMPRESSED uint64
+	var cLEN uint64
 
-	var UNCOMPRESSED uint64 = 0
-	var iUNCOMPRESSED int = 0
-	var uLEN uint64 = 0
+	var UNCOMPRESSED uint64
+	var iUNCOMPRESSED int
+	var uLEN uint64
 
-	LEN, _, lLEN, err = this.readUInt64At(hStartIndex) // "%TLEN "
-	hStartIndex += lLEN                                // hStartIndex -> "CLEN ULEN *0 NROWS NCOLS <Compressed DATA...>"
+	LEN, _, lLEN, _ = this.readUInt64At(hStartIndex) // "%TLEN "
+	hStartIndex += lLEN                              // hStartIndex -> "CLEN ULEN *0 NROWS NCOLS <Compressed DATA...>"
 
-	COMPRESSED, _, cLEN, err = this.readUInt64At(hStartIndex) // "CLEN "
-	hStartIndex += cLEN                                       // hStartIndex -> "ULEN *0 NROWS NCOLS <Compressed DATA...>"
+	COMPRESSED, _, cLEN, _ = this.readUInt64At(hStartIndex) // "CLEN "
+	hStartIndex += cLEN                                     // hStartIndex -> "ULEN *0 NROWS NCOLS <Compressed DATA...>"
 
-	UNCOMPRESSED, _, uLEN, err = this.readUInt64At(hStartIndex) // "ULEN "
-	hStartIndex += uLEN                                         // hStartIndex -> "*0 NROWS NCOLS <Compressed DATA...>"
+	UNCOMPRESSED, _, uLEN, _ = this.readUInt64At(hStartIndex) // "ULEN "
+	hStartIndex += uLEN                                       // hStartIndex -> "*0 NROWS NCOLS <Compressed DATA...>"
 
 	zStartIndex = LEN - COMPRESSED + lLEN + 1 // zStartIndex -> "<Compressed DATA...>"
 	hLEN := zStartIndex - hStartIndex         // = len( "*0 NROWS NCOLS " )
@@ -142,7 +142,6 @@ func (this *Chunk) readUInt64At(offset uint64) (uint64, uint64, uint64, error) {
 		}
 		bytesRead++
 	}
-	return 0, 0, 0, errors.New("Overflow")
 }
 
 func (this *Chunk) readValueAt(offset uint64) (Value, uint64, error) {
@@ -222,21 +221,19 @@ func (this *Value) readBufferAt(chunk *Chunk, offset uint64) (uint64, error) {
 }
 
 func protocolBufferFromValue(v interface{}) [][]byte {
-	if v == nil {
+	switch v := v.(type) {
+	case nil:
 		return protocolBufferFromNull()
-	} else {
-		switch v.(type) {
-		case int, int8, int16, int32, int64:
-			return protocolBufferFromInt(v)
-		case float32, float64:
-			return protocolBufferFromFloat(v)
-		case string:
-			return protocolBufferFromString(v.(string), true)
-		case []byte:
-			return protocolBufferFromBytes(v.([]byte))
-		default:
-			return make([][]byte, 0)
-		}
+	case int, int8, int16, int32, int64:
+		return protocolBufferFromInt(v)
+	case float32, float64:
+		return protocolBufferFromFloat(v)
+	case string:
+		return protocolBufferFromString(v, true)
+	case []byte:
+		return protocolBufferFromBytes(v)
+	default:
+		return make([][]byte, 0)
 	}
 }
 
@@ -404,8 +401,6 @@ func (this *SQCloud) sendArray(command string, values []interface{}) (int, error
 			if bytesSent != bytesToSend {
 				return bytesSent, errors.New("Partitial data sent")
 			}
-		} else {
-			bytesSent = 0
 		}
 	}
 

@@ -8,14 +8,14 @@ SQLiteCloud listens to a default port (default 8860) where clients can connect (
 
 When a client send the first **LISTEN channel** command a special reply is sent back to it. This reply is a special command that must be re-executed as is on server side. Command is:
 
-**PAUTH** **client_uuid** **client_secret** 
+**PAUTH** **client_uuid** **client_secret**
 
 - When executed on **client-side**, the client opens a new connection to the server and a new thread is created listening for read events on this new socket.
 - When executed on **server-side**, client is recognized (using uuid) and authenticated (using secret) and its pubsub socket is set to the current socket used by this new connection. This socket will be used exclusively to deliver notifications. Socket flow is different from the default one because it involves WRITE operations only.
 
 The following commands are related to PUB/SUB:
 
-1. **LISTEN channel**: registers the current client as a listener on the notification channel named `channel`. If the current session is already registered as a listener for this notification channel, nothing is done. If channel has the same name of the current database (if any) table then all WRITE operations will be notified. If channel is `*` the all WRITE operations of all the tables of the current database (if any) will be notified. LISTEN takes effect at transaction commit. If channel is not `*` and it is not the name of table in the current database (if any), then it represents a named channel that can be notified only by NOTIFY channel commands. 
+1. **LISTEN channel**: registers the current client as a listener on the notification channel named `channel`. If the current session is already registered as a listener for this notification channel, nothing is done. If channel has the same name of the current database (if any) table then all WRITE operations will be notified. If channel is `*` the all WRITE operations of all the tables of the current database (if any) will be notified. LISTEN takes effect at transaction commit. If channel is not `*` and it is not the name of table in the current database (if any), then it represents a named channel that can be notified only by NOTIFY channel commands.
 2. **UNLISTEN channel**: remove an existing registration for `NOTIFY` events. `UNLISTEN` cancels any existing registration of the current SQLiteCloud session as a listener on the notification channel named `channel`. The special wildcard `*` cancels all listener registrations for the current session.
 3. **NOTIFY channel [, payload]**: The `NOTIFY` command sends a notification event together with an optional "payload" string to each client application that has previously executed `LISTEN channel` for the specified channel name in the current database. The payload (if any) is broadcast as is to all other connections without any modification on server side.
 

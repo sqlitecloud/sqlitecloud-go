@@ -248,7 +248,7 @@ func (this *SQCloud) CheckConnectionParameter() error {
 	}
 
 	if this.Timeout < 0 {
-		return errors.New(fmt.Sprintf("Invalid Timeout (%s)", this.Timeout.String()))
+		return fmt.Errorf("Invalid Timeout (%s)", this.Timeout.String())
 	}
 
 	return nil
@@ -318,7 +318,6 @@ func (this *SQCloud) reconnect() error {
 
 	var dialer = net.Dialer{}
 	dialer.Timeout = this.Timeout
-	dialer.DualStack = true
 
 	switch {
 	case this.cert != nil:
@@ -532,7 +531,7 @@ func (this *SQCloud) Compress(CompressMode string) error {
 	case this.sock == nil:
 		return errors.New("Not connected")
 	case c == "":
-		return errors.New(fmt.Sprintf("Invalid method (%s)", CompressMode))
+		return fmt.Errorf("Invalid method (%s)", CompressMode)
 	default:
 		return this.Execute(c)
 	}

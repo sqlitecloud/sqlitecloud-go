@@ -3,7 +3,7 @@
 12334
 │││││
 ││││└─ Error Reason
-│││└── Data Type 
+│││└── Data Type
 ││└─── Class
 │└──── Module
 ```

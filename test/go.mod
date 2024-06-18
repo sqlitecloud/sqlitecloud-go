@@ -1,10 +1,10 @@
-module github.com/sqlitecloud/go-sdk/test
+module github.com/sqlitecloud/sqlitecloud-go/test
 
 go 1.18
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/sqlitecloud/go-sdk v0.0.0
+	github.com/sqlitecloud/sqlitecloud-go v0.0.0
 	github.com/stretchr/testify v1.9.0
 )
 
@@ -20,4 +20,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/sqlitecloud/go-sdk v0.0.0 => ../
+replace github.com/sqlitecloud/sqlitecloud-go v0.0.0 => ../

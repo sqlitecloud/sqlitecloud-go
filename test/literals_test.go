@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 
-	sqlitecloud "github.com/sqlitecloud/go-sdk"
+	sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
 )
 
 const testDbnameLiteral = "test-gosdk-literal-db.sqlite"

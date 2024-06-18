@@ -1,0 +1,44 @@
+# Create an incremental tag on Github using SemVer https://semver.org: x.y.z
+# A tag is a release version on pkg.go.dev, which is
+# notified with the publishing go command.
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      choice:
+        type: choice
+        description: "Release types (x.y.patch / x.minor.z / major.y.z)"
+        options:
+        - patch
+        - minor
+        - major
+
+jobs:
+  release:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    name: Tag for release
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Last version
+      id: last-version
+      run: echo "::set-output name=tag::$(git describe --tags `git rev-list --tags --max-count=1`)"
+    - name: Bump version
+      id: bump-version
+      uses: olegsu/semver-action@v1
+      with:
+        version: ${{ steps.last-version.outputs.tag }}
+        bump: ${{ inputs.choice }}
+    - name: Create tag as version for the package
+      run: |
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "GitHub Actions"
+        git tag ${{ steps.bump-version.outputs.version }}
+        git push origin ${{ steps.bump-version.outputs.version }}
+    - name: Publish on pkg.go.dev
+      run: GOPROXY=proxy.golang.org go list -m github.com/sqlitecloud/sqlitecloud-go@${{ steps.bump-version.outputs.version }}

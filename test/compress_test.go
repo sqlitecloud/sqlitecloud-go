@@ -24,7 +24,7 @@ import (
 	"os"
 	"testing"
 
-	sqlitecloud "github.com/sqlitecloud/go-sdk"
+	sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
 )
 
 const testDbnameCompress = "test-gosdk-compress-db.sqlite"
@@ -34,7 +34,7 @@ func TestCompress(t *testing.T) {
 	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
 	connectionString += "?apikey=" + apikey
 
-	url, err := url.Parse(connectionString)
+	url, _ := url.Parse(connectionString)
 	values := url.Query()
 	values.Add("compress", sqlitecloud.CompressModeLZ4)
 	url.RawQuery = values.Encode()

@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	sqlitecloud "github.com/sqlitecloud/go-sdk"
+	sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
 	"github.com/stretchr/testify/assert"
 )
 

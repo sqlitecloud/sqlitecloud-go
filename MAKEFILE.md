@@ -1,4 +1,4 @@
-# SQLite Cloud go-sdk Makefile
+# SQLite Cloud sqlitecloud-go Makefile
 
 ### Run the test for the SDK
 If you want to run the Test programs: `make test`

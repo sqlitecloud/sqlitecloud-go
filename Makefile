@@ -1,8 +1,18 @@
 GOPATH		= $(shell go env GOPATH)
 
+setup-ide:
+	pre-commit install
+	go install golang.org/x/tools/cmd/goimports@latest
+	go mod tidy
+	cd test; go mod tidy
+	cd cli; go mod tidy
+
 # Test SDK
-test:	
-	cd test; go test -v
+test:
+	cd test; go test -v .
+
+test-codecov:
+	cd test; go test -v -race -coverprofile=coverage.txt -covermode=atomic .
 
 # GO SDK
 sdk:	*.go
@@ -11,15 +21,15 @@ sdk:	*.go
 # CLI App
 $(GOPATH)/bin/sqlc:	*.go cli/sqlc.go
 	cd cli; go build -o $(GOPATH)/bin/sqlc
-	
+
 cli: $(GOPATH)/bin/sqlc
 
 github:
-	open https://github.com/sqlitecloud/go-sdk 
-	
+	open https://github.com/sqlitecloud/sqlitecloud-go
+
 diff:
 	git difftool
-	
+
 
 # gosec
 gosec:
@@ -40,15 +50,15 @@ endif
 
 doc:	godoc
 ifeq ($(wildcard ./src),)
-	ln -s . src			
+	ln -s . src
 endif
 	@echo "Hit CRTL-C to stop the documentation server..."
-	@( sleep 1 && open http://localhost:6060/pkg/github.com/sqlitecloud/go-sdk/ ) &
+	@( sleep 1 && open http://localhost:6060/pkg/github.com/sqlitecloud/sqlitecloud-go/ ) &
 	@$(GOPATH)/bin/godoc -http=:6060 -index -play
 
 clean:
-	rm -rf $(GOPATH)/bin/sqlc* 
+	rm -rf $(GOPATH)/bin/sqlc*
 
 all: sdk cli test
 
-.PHONY: test sdk 
+.PHONY: test sdk

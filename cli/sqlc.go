@@ -18,7 +18,7 @@
 package main
 
 import (
-	sqlitecloud "github.com/sqlitecloud/go-sdk"
+	sqlitecloud "github.com/sqlitecloud/sqlitecloud-go"
 
 	"bufio"
 	"errors"
@@ -74,7 +74,7 @@ General Options:
 Output Format Options:
   -o, --output FILE        Switch to BATCH mode, execute SQL Commands and send output to FILE, then exit.
                            In BATCH mode, the default output format is switched to QUOTE.
-  
+
   --echo                   Disables --quiet, print command(s) before execution
   --quiet                  Disables --echo, run command(s) quietly (no messages, only query output)
   --noheader               Turn headers off

@@ -880,8 +880,8 @@ func (this *SQCloud) readResult() (*Result, error) {
 				// Array
 				case CMD_ARRAY:
 					var offset uint64 = 1 // skip the first type byte
-					var N uint64 = 0
-					var bytesRead uint64 = 0
+					var N uint64
+					var bytesRead uint64
 
 					if _, _, bytesRead, err = chunk.readUInt64At(offset); err != nil {
 						return nil, err
@@ -900,14 +900,14 @@ func (this *SQCloud) readResult() (*Result, error) {
 
 					for row := uint64(0); row < N; row++ {
 						result.rows[row].result = &result
-						result.rows[row].index = row
-						result.rows[row].columns = make([]Value, 1)
+						result.rows[row].Index = row
+						result.rows[row].Columns = make([]Value, 1)
 
-						switch result.rows[row].columns[0], bytesRead, err = chunk.readValueAt(offset); {
+						switch result.rows[row].Columns[0], bytesRead, err = chunk.readValueAt(offset); {
 						case err != nil:
 							return nil, err
 						default:
-							columnLength := result.rows[row].columns[0].GetLength()
+							columnLength := result.rows[row].Columns[0].GetLength()
 							if result.Width[0] < columnLength {
 								result.Width[0] = columnLength
 							}
@@ -929,12 +929,12 @@ func (this *SQCloud) readResult() (*Result, error) {
 					// RowSet Chunk:    /LEN IDX:VERSION ROWS COLS DATA
 
 					var offset uint64 = 1 // skip the first type byte
-					var bytesRead uint64 = 0
-					var LEN uint64 = 0
-					var IDX uint64 = 0
-					var VERSION uint64 = 0
-					var NROWS uint64 = 0
-					var NCOLS uint64 = 0
+					var bytesRead uint64
+					var LEN uint64
+					var IDX uint64
+					var VERSION uint64
+					var NROWS uint64
+					var NCOLS uint64
 
 					// Detect end of Rowset Chunk directly without parsing...
 					if Type == CMD_ROWSET_CHUNK {
@@ -965,7 +965,7 @@ func (this *SQCloud) readResult() (*Result, error) {
 					} // 0..columns-1
 					offset += bytesRead
 
-					LEN = LEN + offset // check for overreading...
+					LEN += offset // check for overreading...
 
 					if Type == CMD_ROWSET_CHUNK && NROWS == 0 && NCOLS == 0 {
 						return &result, nil
@@ -1105,17 +1105,17 @@ func (this *SQCloud) readResult() (*Result, error) {
 					for row := uint64(0); row < NROWS; row++ {
 
 						rows[row].result = &result
-						rows[row].index = rowIndex
-						rows[row].columns = make([]Value, int(NCOLS))
+						rows[row].Index = rowIndex
+						rows[row].Columns = make([]Value, int(NCOLS))
 
 						rowIndex++
 
 						for column := uint64(0); column < NCOLS; column++ {
-							switch rows[row].columns[column], bytesRead, err = chunk.readValueAt(offset); {
+							switch rows[row].Columns[column], bytesRead, err = chunk.readValueAt(offset); {
 							case err != nil:
 								return nil, err
 							default:
-								columnLength := rows[row].columns[column].GetLength()
+								columnLength := rows[row].Columns[column].GetLength()
 								if result.Width[column] < columnLength {
 									result.Width[column] = columnLength
 								}
