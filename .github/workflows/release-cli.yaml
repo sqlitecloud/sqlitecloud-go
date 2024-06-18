@@ -1,6 +1,6 @@
 # Create an incremental tag (like `cli-v1.2.0`) on Github using SemVer https://semver.org: x.y.z
-# Create the Release (like `cli-v1.2.0`) based on this tag and with the same name.
-# Build the CLI for all OS and upload them as assets to the release.
+# Create the Release (like `cli-v1.2.0`) related to the tag and with the same name.
+# Build the CLI for all OS and upload them to the release as assets.
 
 name: Release CLI
 
@@ -16,9 +16,37 @@ on:
         - major
 
 jobs:
-  release-cli:
-    if: ${{ github.ref == 'refs/heads/main' }}
-    name: Release CLI
+  set-releasename:
+    runs-on: ubuntu-latest
+    name: New release name
+    outputs:
+      RELEASENAME: ${{ steps.set-outputs.outputs.RELEASENAME }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # download tags
+          fetch-depth: 0
+
+      - name: Last version
+        id: last-version
+        run: echo "LASTVERSION=$(git tag --list 'cli-v*' | sort -V | tail -n1 | sed 's/cli-v//')" >> $GITHUB_ENV
+
+      - name: Bump version
+        id: bump-version
+        uses: olegsu/semver-action@v1
+        with:
+          version: ${{ env.LASTVERSION }}
+          bump: ${{ inputs.choice }}
+
+      - name: Output release name
+        id: set-outputs
+        run: echo "RELEASENAME=cli-v${{ steps.bump-version.outputs.version }}" >> "$GITHUB_OUTPUT"
+
+  build-cli:
+    # if: ${{ github.ref == 'refs/heads/main' }}
+    needs: set-releasename
+    name: Build CLI
     strategy:
       matrix:
         include:
@@ -36,52 +64,103 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
+      RELEASENAME: ${{ needs.set-releasename.outputs.RELEASENAME }}
       OSNAME: ${{matrix.goos == 'darwin' && 'macos' || matrix.goos }}
       GOARCH: ${{ matrix.goarch }}
       GOOS:  ${{ matrix.goos }}
       ARCHNAME: ${{ matrix.goarch == 'amd64' && 'x86-64' || matrix.goarch }}
+    outputs:
+      RELEASENAME: ${{ steps.set-outputs.outputs.RELEASENAME }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set env var
-        run: echo "ZIPFILE=sqlitecloud-go-${{ steps.tag-and-release.outputs.name }}-${{ env.OSNAME }}-${{ env.ARCHNAME }}.zip" >> $GITHUB_ENV
+      - name: Set zipfile name
+        run: echo "ZIPFILE=sqlitecloud-go-${{ env.RELEASENAME }}-${{ env.OSNAME }}-${{ env.ARCHNAME }}.zip" >> $GITHUB_ENV
 
       - name: Build CLI
         run: |
-          cd GO/cli
+          cd cli
           go build -o ../sqlc
           cd ..
           zip ${{ env.ZIPFILE }} sqlc
 
-      - name: Last version
-        id: last-version
-        # last tag that starts with 'cli-v', eg: cli-v1.2.0 but outputs it as: v1.2.0
-        run: echo "::set-output name=number::$(git tag --list 'cli-v*' | sort -V | tail -n1 | sed 's/cli-//')"
-
-      - name: Bump version
-        id: bump-version
-        uses: olegsu/semver-action@v1
+        # Upload assets to be used in the last job
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
         with:
-          version: ${{ steps.last-version.outputs.number }}
-          bump: ${{ inputs.choice }}
+          name: ${{ env.ZIPFILE }}
+          path: ./${{ env.ZIPFILE }}
+          if-no-files-found: error
 
-      - name: Tag and Release name
-        id: tag-and-release
-        # eg: cli-v1.2.0
-        run: echo "::set-output name=name::cli-v$(git tag --list 'v*' | sort -V | tail -n1)"
+      - name: Set outputs
+        id: set-outputs
+        run: |
+          echo "RELEASENAME=${{ env.RELEASENAME }}" >> "$GITHUB_OUTPUT"
+
+  release-cli:
+    name: Release CLI
+    needs: build-cli
+    runs-on: ubuntu-latest
+    env:
+      RELEASENAME: ${{ needs.build-cli.outputs.RELEASENAME }}
+    outputs:
+      RELEASENAME: ${{ steps.set-outputs.outputs.RELEASENAME }}
+      UPLOADURL: ${{ steps.set-outputs.outputs.UPLOADURL }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Create Release for CLI
         id: release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag-and-release.outputs.name }}
-          name: Release ${{ steps.tag-and-release.outputs.name }}
+          tag_name: ${{ env.RELEASENAME }}
+          name: Release ${{ env.RELEASENAME }}
           draft: false
           generate_release_notes: true
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set outputs
+        id: set-outputs
+        run: |
+          echo "RELEASENAME=${{ env.RELEASENAME }}" >> "$GITHUB_OUTPUT"
+          echo "UPLOADURL=${{ steps.release.outputs.upload_url }}" >> "$GITHUB_OUTPUT"
+
+  upload-artifacts:
+    needs: release-cli
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goarch: amd64
+            goos:   linux
+
+          - goarch: amd64
+            goos:   windows
+
+          - goarch: arm64
+            goos:   darwin
+
+          - goarch: amd64
+            goos:   darwin
+    env:
+      RELEASENAME: ${{ needs.release-cli.outputs.RELEASENAME }}
+      UPLOADURL: ${{ needs.release-cli.outputs.UPLOADURL }}
+      OSNAME: ${{matrix.goos == 'darwin' && 'macos' || matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      GOOS: ${{ matrix.goos }}
+      ARCHNAME: ${{ matrix.goarch == 'amd64' && 'x86-64' || matrix.goarch }}
+    steps:
+      - name: Set zip filename
+        run: echo "ZIPFILE=sqlitecloud-go-${{ env.RELEASENAME }}-${{ env.OSNAME }}-${{ env.ARCHNAME }}.zip" >> $GITHUB_ENV
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ZIPFILE }}
 
       - name: Upload Release Asset
         id: upload-release-asset
@@ -90,15 +169,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: ./GO/${{ env.ZIPFILE }}
+          upload_url: ${{ env.UPLOADURL }}
+          asset_path: ./${{ env.ZIPFILE }}
           asset_name: ${{ env.ZIPFILE }}
           asset_content_type: application/zip
-
-      - name: Upload binary artifact
-        uses: actions/upload-artifact@v3
-        if: matrix.goos == 'darwin'
-        with:
-          name: ${{ env.ZIPFILE }}
-          path: ./GO/${{ env.ZIPFILE }}
-          if-no-files-found: error
