@@ -32,7 +32,7 @@ jobs:
       id: bump-version
       uses: olegsu/semver-action@v1
       with:
-        version: ${{ steps.last-version.outputs.tag }}
+        version: v${{ steps.last-version.outputs.tag }}
         bump: ${{ inputs.choice }}
     - name: Create tag as version for the package
       run: |
