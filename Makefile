@@ -3,6 +3,9 @@ GOPATH		= $(shell go env GOPATH)
 setup-ide:
 	pre-commit install
 	go install golang.org/x/tools/cmd/goimports@latest
+	go mod tidy
+	cd test; go mod tidy
+	cd cli; go mod tidy
 
 # Test SDK
 test:
