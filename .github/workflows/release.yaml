@@ -27,7 +27,8 @@ jobs:
         fetch-depth: 0
     - name: Last version
       id: last-version
-      run: echo "::set-output name=tag::$(git describe --tags `git rev-list --tags --max-count=1`)"
+      # last tag that starts with 'v', eg: v1.0.3
+      run: echo "::set-output name=tag::$(git tag --list 'v*' | sort -V | tail -n1)"
     - name: Bump version
       id: bump-version
       uses: olegsu/semver-action@v1
