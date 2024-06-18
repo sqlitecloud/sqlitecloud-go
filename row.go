@@ -29,8 +29,8 @@ import (
 
 type ResultRow struct {
 	result  *Result
-	index   uint64  `json:"Index"` // 0, 1, ... rows-1
-	columns []Value `json:"ColumnValues"`
+	Index   uint64  `json:"Index"` // 0, 1, ... rows-1
+	Columns []Value `json:"ColumnValues"`
 }
 
 // ToJSON returns a JSON representation of this query result row.
@@ -42,7 +42,7 @@ func (this *ResultRow) IsFirst() bool {
 	case this.result.GetNumberOfRows() < 1:
 		return false
 	default:
-		return this.index == 0
+		return this.Index == 0
 	}
 }
 
@@ -52,7 +52,7 @@ func (this *ResultRow) IsLast() bool {
 	case this.result.GetNumberOfRows() < 1:
 		return false
 	default:
-		return this.index == this.result.GetNumberOfRows()-1
+		return this.Index == this.result.GetNumberOfRows()-1
 	}
 }
 
@@ -62,7 +62,7 @@ func (this *ResultRow) IsEOF() bool {
 	case this.result.GetNumberOfRows() < 1:
 		return true
 	default:
-		return this.index >= this.result.GetNumberOfRows()
+		return this.Index >= this.result.GetNumberOfRows()
 	}
 }
 
@@ -78,7 +78,7 @@ func (this *ResultRow) Rewind() *ResultRow {
 
 // Next fetches the next row in this query result and returns it, otherwise if there is no next row, nil is returned.
 func (this *ResultRow) Next() *ResultRow {
-	switch row, err := this.result.GetRow(this.index + 1); {
+	switch row, err := this.result.GetRow(this.Index + 1); {
 	case err != nil:
 		return nil
 	default:
@@ -86,14 +86,14 @@ func (this *ResultRow) Next() *ResultRow {
 	}
 }
 
-func (this *ResultRow) GetNumberOfColumns() uint64 { return uint64(len(this.columns)) }
+func (this *ResultRow) GetNumberOfColumns() uint64 { return uint64(len(this.Columns)) }
 
 func (this *ResultRow) GetValue(Column uint64) (*Value, error) {
 	switch {
 	case Column >= this.GetNumberOfColumns():
 		return nil, errors.New("Column index out of bounds")
 	default:
-		return &this.columns[Column], nil
+		return &this.Columns[Column], nil
 	}
 }
 
@@ -211,37 +211,37 @@ func (this *ResultRow) IsText(Column uint64) bool {
 // GetStringValue returns the contents in column Column of this query result row as string.
 // The Column index is an unsigned int in the range of 0...GetNumberOfColumns() - 1.
 func (this *ResultRow) GetString(Column uint64) (string, error) {
-	return this.result.GetStringValue(this.index, Column)
+	return this.result.GetStringValue(this.Index, Column)
 }
 
 // GetInt32Value returns the contents in column Column of this query result row as int32.
 // The Column index is an unsigned int in the range of 0...GetNumberOfColumns() - 1.
 func (this *ResultRow) GetInt32(Column uint64) (int32, error) {
-	return this.result.GetInt32Value(this.index, Column)
+	return this.result.GetInt32Value(this.Index, Column)
 }
 
 // GetInt64Value returns the contents in column Column of this query result row as int64.
 // The Column index is an unsigned int in the range of 0...GetNumberOfColumns() - 1.
 func (this *ResultRow) GetInt64(Column uint64) (int64, error) {
-	return this.result.GetInt64Value(this.index, Column)
+	return this.result.GetInt64Value(this.Index, Column)
 }
 
 // GetFloat32Value returns the contents in column Column of this query result row as float32.
 // The Column index is an unsigned int in the range of 0...GetNumberOfColumns() - 1.
 func (this *ResultRow) GetFloat32(Column uint64) (float32, error) {
-	return this.result.GetFloat32Value(this.index, Column)
+	return this.result.GetFloat32Value(this.Index, Column)
 }
 
 // GetFloat64Value returns the contents in column Column of this query result row as float64.
 // The Column index is an unsigned int in the range of 0...GetNumberOfColumns() - 1.
 func (this *ResultRow) GetFloat64(Column uint64) (float64, error) {
-	return this.result.GetFloat64Value(this.index, Column)
+	return this.result.GetFloat64Value(this.Index, Column)
 }
 
 // GetSQLDateTime parses this query result value in column Column as an SQL-DateTime and returns its value.
 // The Column index is an unsigned int in the range of 0...GetNumberOfColumns() - 1.
 func (this *ResultRow) GetSQLDateTime(Column uint64) (time.Time, error) {
-	return this.result.GetSQLDateTime(this.index, Column)
+	return this.result.GetSQLDateTime(this.Index, Column)
 }
 
 ////////

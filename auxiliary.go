@@ -46,7 +46,7 @@ func (this *SQCloud) GetAutocompleteTokens() (tokens []string) {
 			if table != "sqlite_sequence" {
 				tokens = append(tokens, table)
 				for _, column := range this.ListColumns(table) {
-					tokens = append(tokens, fmt.Sprintf("%s", column))
+					tokens = append(tokens, column)
 					tokens = append(tokens, fmt.Sprintf("%s.%s", table, column))
 				}
 			}
@@ -239,7 +239,7 @@ func resultToMap(result *Result, err error) (map[string]interface{}, error) {
 					keyValueList[key.GetString()] = nil
 					// case val.IsJSON():
 				default:
-					return map[string]interface{}{}, errors.New(fmt.Sprintf("ERROR: Value type %v not supported", val.GetType()))
+					return map[string]interface{}{}, fmt.Errorf("ERROR: Value type %v not supported", val.GetType())
 				}
 			}
 			return keyValueList, nil

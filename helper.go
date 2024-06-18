@@ -20,7 +20,6 @@ package sqlitecloud
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -101,41 +100,4 @@ func parseBool(value string, defaultValue bool) (bool, error) {
 	default:
 		return false, errors.New("ERROR: Not a Boolean value")
 	}
-}
-
-// parseInt parses the given string value and tries to extract its value as an int value.
-// If value was an empty string, the defaultValue is evaluated instead.
-// If the given string value does not resemble a numeric value or its numeric value is smaler than minValue or exceeds maxValue, an error describing the problem is returned.
-func parseInt(value string, defaultValue int, minValue int, maxValue int) (int, error) {
-	// println( "ParseInt = " + value )
-	value = strings.TrimSpace(value)
-	if value == "" {
-		value = fmt.Sprintf("%d", defaultValue)
-	}
-	if v, err := strconv.Atoi(value); err == nil {
-		if v < minValue {
-			return 0, errors.New("ERROR: The given Number is too small")
-		}
-		if v > maxValue {
-			return 0, errors.New("ERROR: The given Number is too large")
-		}
-		return v, nil
-	} else {
-		return 0, err
-	}
-}
-
-// parseString returns a non empty string.
-// The given string value is trimmed.
-// If the given string is an empty string, the defaultValue is evaluated instead.
-// If the given string and the defaultValue are emptry strings, an error is returned.
-func parseString(value string, defaultValue string) (string, error) {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		value = strings.TrimSpace(defaultValue)
-	}
-	if value == "" {
-		return "", errors.New("ERROR: Empty value")
-	}
-	return value, nil
 }
