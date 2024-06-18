@@ -12,14 +12,14 @@
 
 [![Test and QA](https://github.com/sqlitecloud/sqlitecloud-go/actions/workflows/testing.yaml/badge.svg?branch=main)](https://github.com/sqlitecloud/sqlitecloud-go/actions/workflows/testing.yaml)
 [![codecov](https://codecov.io/gh/sqlitecloud/sqlitecloud-go/graph/badge.svg?token=5MAG3G4X01)](https://codecov.io/gh/sqlitecloud/sqlitecloud-go)
-[![GitHub Tag](https://img.shields.io/github/v/tag/sqlitecloud/sqlitecloud-go?label=version&link=https%3A%2F%2Fpkg.go.dev%2Fgithub.com%2Fsqlitecloud%2Fsqlitecloud-go)](https://github.com/sqlitecloud/sqlitecloud-go)
-[![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/sqlitecloud/sqlitecloud-go?link=https%3A%2F%2Fgithub.com%2Fsqlitecloud%2Fsqlitecloud-go)](https://github.com/sqlitecloud/sqlitecloud-go)
+[![GitHub Tag](https://img.shields.io/github/v/tag/sqlitecloud/sqlitecloud-go?label=version&link=https%3A%2F%2Fpkg.go.dev%2Fgithub.com%2Fsqlitecloud%2Fsqlitecloud-go)](https://pkg.go.dev/github.com/sqlitecloud/sqlitecloud-go)
+[![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/sqlitecloud/sqlitecloud-go?link=https%3A%2F%2Fpkg.go.dev%2Fgithub.com%2Fsqlitecloud%2Fsqlitecloud-go)](https://pkg.go.dev/github.com/sqlitecloud/sqlitecloud-go)
 
 ---
 
 [SQLite Cloud](https://sqlitecloud.io) for Go is a powerful package that allows you to interact with the SQLite Cloud database seamlessly. It provides methods for various database operations. This package is designed to simplify database operations in Go applications, making it easier than ever to work with SQLite Cloud. In addition to the standard SQLite statements, several other [commands](https://docs.sqlitecloud.io/docs/commands) are supported.
 
-- Documentation: https://pkg.go.dev/github.com/sqlitecloud/sqlitecloud-go
+- Documentation: [https://pkg.go.dev/github.com/sqlitecloud/sqlitecloud-go#section-documentation](https://pkg.go.dev/github.com/sqlitecloud/sqlitecloud-go#section-documentation)
 - Source: [https://github.com/sqlitecloud/sqlitecloud-go](https://github.com/sqlitecloud/sqlitecloud-go)
 - Site: [https://sqlitecloud.io](https://sqlitecloud.io/developers)
 

@@ -12,7 +12,7 @@ test:
 	cd test; go test -v .
 
 test-codecov:
-	cd test; go test -v -race -coverprofile=coverage.txt -covermode=atomic .
+	cd test; go test -v -race -coverprofile=coverage.out -covermode=atomic .
 
 # GO SDK
 sdk:	*.go

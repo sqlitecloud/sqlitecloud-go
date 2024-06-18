@@ -1,0 +1,104 @@
+# Create an incremental tag (like `cli-v1.2.0`) on Github using SemVer https://semver.org: x.y.z
+# Create the Release (like `cli-v1.2.0`) based on this tag and with the same name.
+# Build the CLI for all OS and upload them as assets to the release.
+
+name: Release CLI
+
+on:
+  workflow_dispatch:
+    inputs:
+      choice:
+        type: choice
+        description: "Release types (x.y.patch / x.minor.z / major.y.z)"
+        options:
+        - patch
+        - minor
+        - major
+
+jobs:
+  release-cli:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    name: Release CLI
+    strategy:
+      matrix:
+        include:
+          - goarch: amd64
+            goos:   linux
+
+          - goarch: amd64
+            goos:   windows
+
+          - goarch: arm64
+            goos:   darwin
+
+          - goarch: amd64
+            goos:   darwin
+
+    runs-on: ubuntu-latest
+    env:
+      OSNAME: ${{matrix.goos == 'darwin' && 'macos' || matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      GOOS:  ${{ matrix.goos }}
+      ARCHNAME: ${{ matrix.goarch == 'amd64' && 'x86-64' || matrix.goarch }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set env var
+        run: echo "ZIPFILE=sqlitecloud-go-${{ steps.tag-and-release.outputs.name }}-${{ env.OSNAME }}-${{ env.ARCHNAME }}.zip" >> $GITHUB_ENV
+
+      - name: Build CLI
+        run: |
+          cd GO/cli
+          go build -o ../sqlc
+          cd ..
+          zip ${{ env.ZIPFILE }} sqlc
+
+      - name: Last version
+        id: last-version
+        # last tag that starts with 'cli-v', eg: cli-v1.2.0 but outputs it as: v1.2.0
+        run: echo "::set-output name=number::$(git tag --list 'cli-v*' | sort -V | tail -n1 | sed 's/cli-//')"
+
+      - name: Bump version
+        id: bump-version
+        uses: olegsu/semver-action@v1
+        with:
+          version: ${{ steps.last-version.outputs.number }}
+          bump: ${{ inputs.choice }}
+
+      - name: Tag and Release name
+        id: tag-and-release
+        # eg: cli-v1.2.0
+        run: echo "::set-output name=name::cli-v$(git tag --list 'v*' | sort -V | tail -n1)"
+
+      - name: Create Release for CLI
+        id: release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag-and-release.outputs.name }}
+          name: Release ${{ steps.tag-and-release.outputs.name }}
+          draft: false
+          generate_release_notes: true
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        if: matrix.goos != 'darwin'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: ./GO/${{ env.ZIPFILE }}
+          asset_name: ${{ env.ZIPFILE }}
+          asset_content_type: application/zip
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v3
+        if: matrix.goos == 'darwin'
+        with:
+          name: ${{ env.ZIPFILE }}
+          path: ./GO/${{ env.ZIPFILE }}
+          if-no-files-found: error
