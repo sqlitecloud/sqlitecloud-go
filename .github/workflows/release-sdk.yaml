@@ -2,7 +2,7 @@
 # A tag is a release version on pkg.go.dev, which is
 # notified with the publishing go command.
 
-name: Release
+name: Release SDK
 
 on:
   workflow_dispatch:
@@ -16,30 +16,35 @@ on:
         - major
 
 jobs:
-  release:
+  release-sdk:
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     name: Tag for release
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
+        # download tags
         fetch-depth: 0
+
     - name: Last version
       id: last-version
-      # last tag that starts with 'v', eg: v1.0.3
-      run: echo "::set-output name=tag::$(git tag --list 'v*' | sort -V | tail -n1)"
+      # last tag that starts with 'v', eg: v1.0.3 but outputs it as: 1.0.3
+      run: echo "LASTVERSION=$(git tag --list 'v*' | sort -V | tail -n1 | sed 's/v//')" >> $GITHUB_ENV
+
     - name: Bump version
       id: bump-version
       uses: olegsu/semver-action@v1
       with:
-        version: ${{ steps.last-version.outputs.tag }}
+        version: ${{ env.LASTVERSION }}
         bump: ${{ inputs.choice }}
+
     - name: Create tag as version for the package
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "GitHub Actions"
         git tag v${{ steps.bump-version.outputs.version }}
         git push origin v${{ steps.bump-version.outputs.version }}
+
     - name: Publish on pkg.go.dev
       run: GOPROXY=proxy.golang.org go list -m github.com/sqlitecloud/sqlitecloud-go@v${{ steps.bump-version.outputs.version }}
