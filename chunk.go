@@ -254,7 +254,7 @@ func protocolBufferFromInt(v interface{}) [][]byte {
 }
 
 func protocolBufferFromFloat(v interface{}) [][]byte {
-	return [][]byte{[]byte(fmt.Sprintf("%c%v ", CMD_FLOAT, v))}
+	return [][]byte{[]byte(fmt.Sprintf("%c%s ", CMD_FLOAT, strconv.FormatFloat(v.(float64), 'f', -1, 64)))}
 }
 
 // func protocolBufferFromFloat(v interface{}) [][]byte {
