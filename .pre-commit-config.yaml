@@ -24,6 +24,8 @@ repos:
         language: golang
         entry: goimports
         files: \.go$
+        additional_dependencies:
+        - golang.org/x/tools/cmd/goimports@latest
         args:
         - -w
         require_serial: true
