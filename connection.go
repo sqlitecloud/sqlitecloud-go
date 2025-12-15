@@ -49,10 +49,11 @@ type SQCloudConfig struct {
 	TlsInsecureSkipVerify bool          // Accept invalid TLS certificates (no_verify_certificate)
 	Pem                   string
 	ApiKey                string
-	NoBlob                bool // flag to tell the server to not send BLOB columns
-	MaxData               int  // value to tell the server to not send columns with more than max_data bytes
-	MaxRows               int  // value to control rowset chunks based on the number of rows
-	MaxRowset             int  // value to control the maximum allowed size for a rowset
+	Token                 string // Access Token for authentication
+	NoBlob                bool   // flag to tell the server to not send BLOB columns
+	MaxData               int    // value to tell the server to not send columns with more than max_data bytes
+	MaxRows               int    // value to control rowset chunks based on the number of rows
+	MaxRowset             int    // value to control the maximum allowed size for a rowset
 }
 
 type SQCloud struct {
@@ -131,6 +132,7 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 		config.MaxRows = 0
 		config.MaxRowset = 0
 		config.ApiKey = ""
+		config.Token = ""
 
 		sPort := strings.TrimSpace(u.Port())
 		if len(sPort) > 0 {
@@ -195,6 +197,8 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 				config.Secure, config.TlsInsecureSkipVerify, config.Pem = ParseTlsString(lastLiteral)
 			case "apikey":
 				config.ApiKey = lastLiteral
+			case "token":
+				config.Token = lastLiteral
 			case "noblob":
 				if b, err := parseBool(lastLiteral, config.NoBlob); err == nil {
 					config.NoBlob = b
@@ -434,12 +438,14 @@ func connectionCommands(config SQCloudConfig) (string, []interface{}) {
 	}
 
 	if config.ApiKey != "" {
-		c, a := authWithKeyCommand(config.ApiKey)
+		c, a := authWithApiKeyCommand(config.ApiKey)
 		buffer += c
 		args = append(args, a...)
-	}
-
-	if config.Username != "" && config.Password != "" {
+	} else if config.Token != "" {
+		c, a := authWithTokenCommand(config.Token)
+		buffer += c
+		args = append(args, a...)
+	} else if config.Username != "" && config.Password != "" {
 		c, a := authCommand(config.Username, config.Password, config.PasswordHashed)
 		buffer += c
 		args = append(args, a...)

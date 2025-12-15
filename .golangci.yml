@@ -1,0 +1,9 @@
+linters:
+  exclusions:
+    # Disable ST1006 (receiver name style) to allow existing receiver names in server.go
+    rules:
+    - path: server.go
+      linters:
+      - staticcheck
+      - stylecheck
+      text: ST1006

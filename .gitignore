@@ -6,3 +6,4 @@ cli/.vscode
 pkg/
 bin
 .env
+.cache

@@ -54,6 +54,7 @@ const (
 
 type SQCloudNode struct {
 	NodeID           int64
+	PublicAddr       string
 	NodeInterface    string
 	ClusterInterface string
 	Status           SQCloudNodeStatus
@@ -157,16 +158,17 @@ func (this *SQCloud) ListNodes() ([]SQCloudNode, error) {
 	if err == nil {
 		if result != nil {
 			defer result.Free()
-			if result.GetNumberOfColumns() == 7 {
+			if result.GetNumberOfColumns() == 8 {
 				for row, rows := uint64(0), result.GetNumberOfRows(); row < rows; row++ {
 					node := SQCloudNode{}
 					node.NodeID, _ = result.GetInt64Value(row, 0)
-					node.NodeInterface, _ = result.GetStringValue(row, 1)
-					node.ClusterInterface, _ = result.GetStringValue(row, 2)
-					node.Status, _ = stringToSQCloudNodeStatus(result.GetStringValue_(row, 3))
-					node.Progress, _ = stringToSQCloudNodeProgress(result.GetStringValue_(row, 4))
-					node.Match, _ = result.GetInt64Value(row, 5)
-					node.LastActivity, _ = result.GetSQLDateTime(row, 6)
+					node.PublicAddr = result.GetStringValue_(row, 1)
+					node.NodeInterface, _ = result.GetStringValue(row, 2)
+					node.ClusterInterface, _ = result.GetStringValue(row, 3)
+					node.Status, _ = stringToSQCloudNodeStatus(result.GetStringValue_(row, 4))
+					node.Progress, _ = stringToSQCloudNodeProgress(result.GetStringValue_(row, 5))
+					node.Match, _ = result.GetInt64Value(row, 6)
+					node.LastActivity, _ = result.GetSQLDateTime(row, 7)
 					list = append(list, node)
 				}
 				return list, nil
@@ -260,13 +262,21 @@ func (this *SQCloud) Auth(Username string, Password string) error {
 	return this.ExecuteArray(authCommand(Username, Password, false))
 }
 
-func authWithKeyCommand(Key string) (string, []interface{}) {
+func authWithApiKeyCommand(Key string) (string, []interface{}) {
 	return "AUTH APIKEY ?;", []interface{}{Key}
+}
+
+func authWithTokenCommand(Token string) (string, []interface{}) {
+	return "AUTH TOKEN ?;", []interface{}{Token}
 }
 
 // Auth - INTERNAL SERVER COMMAND: Authenticates User with the given API KEY.
 func (this *SQCloud) AuthWithKey(Key string) error {
-	return this.ExecuteArray(authWithKeyCommand(Key))
+	return this.ExecuteArray(authWithApiKeyCommand(Key))
+}
+
+func (this *SQCloud) AuthWithToken(Token string) error {
+	return this.ExecuteArray(authWithTokenCommand(Token))
 }
 
 // Database funcitons
