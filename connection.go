@@ -34,6 +34,7 @@ import (
 type SQCloudConfig struct {
 	Host                  string
 	Port                  int
+	ProjectID             string // ProjectID to identify the user's node
 	Username              string
 	Password              string
 	Database              string
@@ -139,6 +140,12 @@ func ParseConnectionString(ConnectionString string) (config *SQCloudConfig, err 
 			if config.Port, err = strconv.Atoi(sPort); err != nil {
 				return nil, err
 			}
+		}
+
+		// eg: project ID "abvqqetyhq" in "abvqqetyhq.global3.ryujaz.sqlite.cloud"
+		config.ProjectID = strings.Split(config.Host, ".")[0]
+		if config.ProjectID == "" {
+			return nil, fmt.Errorf("invalid connection string: missing project ID in host")
 		}
 
 		for key, values := range u.Query() {

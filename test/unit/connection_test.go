@@ -11,11 +11,12 @@ import (
 )
 
 func TestParseConnectionString(t *testing.T) {
-	connectionString := "sqlitecloud://myhost.sqlite.cloud:8860/mydatabase?timeout=11&compress=yes"
+	connectionString := "sqlitecloud://myproject.sqlite.cloud:8860/mydatabase?timeout=11&compress=yes"
 
 	expectedConfig := &sqlitecloud.SQCloudConfig{
-		Host:                  "myhost.sqlite.cloud",
+		Host:                  "myproject.sqlite.cloud",
 		Port:                  8860,
+		ProjectID:             "myproject",
 		Username:              "",
 		Password:              "",
 		Database:              "mydatabase",
