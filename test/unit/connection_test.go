@@ -11,11 +11,12 @@ import (
 )
 
 func TestParseConnectionString(t *testing.T) {
-	connectionString := "sqlitecloud://myhost.sqlite.cloud:8860/mydatabase?timeout=11&compress=yes"
+	connectionString := "sqlitecloud://myproject.sqlite.cloud:8860/mydatabase?timeout=11&compress=yes"
 
 	expectedConfig := &sqlitecloud.SQCloudConfig{
-		Host:                  "myhost.sqlite.cloud",
+		Host:                  "myproject.sqlite.cloud",
 		Port:                  8860,
+		ProjectID:             "myproject",
 		Username:              "",
 		Password:              "",
 		Database:              "mydatabase",
@@ -57,6 +58,32 @@ func TestParseConnectionStringWithAPIKey(t *testing.T) {
 		TlsInsecureSkipVerify: false,
 		Pem:                   "",
 		ApiKey:                "abc123",
+		NoBlob:                false,
+		MaxData:               0,
+		MaxRows:               0,
+		MaxRowset:             0,
+	}
+
+	config, err := sqlitecloud.ParseConnectionString(connectionString)
+	assert.NoError(t, err)
+	assert.Truef(t, reflect.DeepEqual(expectedConfig, config), "Expected: %+v\nGot: %+v", expectedConfig, config)
+}
+
+func TestParseConnectionStringWithToken(t *testing.T) {
+	connectionString := "sqlitecloud://host.com:8860/dbname?token=123|tok123&compress=true"
+	expectedConfig := &sqlitecloud.SQCloudConfig{
+		Host:                  "host.com",
+		Port:                  8860,
+		Username:              "",
+		Password:              "",
+		Database:              "dbname",
+		Timeout:               0,
+		Compression:           true,
+		CompressMode:          sqlitecloud.CompressModeLZ4,
+		Secure:                true,
+		TlsInsecureSkipVerify: false,
+		Pem:                   "",
+		Token:                 "123|tok123",
 		NoBlob:                false,
 		MaxData:               0,
 		MaxRows:               0,
@@ -186,6 +213,12 @@ func TestParseConnectionStringWithParameters(t *testing.T) {
 			configParam:   "ApiKey",
 			value:         "abc123",
 			expectedValue: "abc123",
+		},
+		{
+			param:         "token",
+			configParam:   "Token",
+			value:         "123|tok123",
+			expectedValue: "123|tok123",
 		},
 	}
 

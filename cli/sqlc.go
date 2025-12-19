@@ -74,7 +74,7 @@ General Options:
 Output Format Options:
   -o, --output FILE        Switch to BATCH mode, execute SQL Commands and send output to FILE, then exit.
                            In BATCH mode, the default output format is switched to QUOTE.
-  
+
   --echo                   Disables --quiet, print command(s) before execution
   --quiet                  Disables --echo, run command(s) quietly (no messages, only query output)
   --noheader               Turn headers off
@@ -96,6 +96,7 @@ Connection Options:
   -e, --create             Create database if it does not exist
   -i, --nonlinearizable    Use non-linearizable mode for queries
   -a, --apikey KEY         Use API key for authentication
+  -k, --token TOKEN        Use TOKEN for authentication
   -n, --noblob             Disable BLOB support
   -x, --maxdata SIZE       Set maximum data size for queries
   -y, --maxrows ROWS       Set maximum number of rows for queries
@@ -150,6 +151,7 @@ type Parameter struct {
 	Create          bool   `docopt:"--create"`
 	NonLinearizable bool   `docopt:"--nonlinearizable"`
 	ApiKey          string `docopt:"--apikey"`
+	Token           string `docopt:"--token"`
 	NoBlob          bool   `docopt:"--noblob"`
 	MaxData         int    `docopt:"--maxdata"`
 	MaxRows         int    `docopt:"--maxrows"`
@@ -294,6 +296,7 @@ func parseParameters() (Parameter, error) {
 					p["--tls"] = "SKIP"
 				}
 				p["--apikey"] = getFirstNoneEmptyString([]string{dropError(p.String("--apikey")), conf.ApiKey})
+				p["--token"] = getFirstNoneEmptyString([]string{dropError(p.String("--token")), conf.Token})
 				if conf.NoBlob {
 					if b, err := p.Bool("--noblob"); err == nil {
 						p["--noblob"] = b || conf.NoBlob
@@ -418,6 +421,7 @@ func main() {
 			Port:            parameter.Port,
 			Username:        parameter.User,
 			Password:        parameter.Password,
+			Token:           parameter.Token,
 			Database:        parameter.Database,
 			Timeout:         time.Duration(parameter.Timeout) * time.Second,
 			Compression:     parameter.Compress == sqlitecloud.CompressModeLZ4,

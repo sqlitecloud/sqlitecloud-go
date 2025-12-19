@@ -9,10 +9,10 @@ setup-ide:
 
 # Test SDK
 test:
-	cd test; go test -v .
+	cd test; go mod tidy && go test -v .
 
 test-codecov:
-	cd test; go test -v -race -coverprofile=coverage.out -covermode=atomic .
+	cd test; go mod tidy && go test -v -race -coverprofile=coverage.out -covermode=atomic .
 
 # GO SDK
 sdk:	*.go
