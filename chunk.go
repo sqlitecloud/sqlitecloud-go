@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pierrec/lz4"
@@ -286,6 +287,8 @@ func (this *SQCloud) sendString(data string) (int, error) {
 		}
 	}
 
+	data = strings.Trim(data, " \t\r\n")
+
 	rawBuffer := protocolBufferFromString(data, false)[0]
 	bytesToSend = len(rawBuffer)
 
@@ -362,6 +365,8 @@ func (this *SQCloud) sendArray(command string, values []interface{}) (int, error
 			return 0, err
 		}
 	}
+
+	command = strings.Trim(command, " \t\r\n")
 
 	// convert values to buffers encoded with whe sqlitecloud protocol
 	buffers := [][]byte{protocolBufferFromString(command, true)[0]}
