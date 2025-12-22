@@ -287,6 +287,8 @@ func (this *SQCloud) sendString(data string) (int, error) {
 		}
 	}
 
+	data = strings.Trim(data, " \t\r\n")
+
 	rawBuffer := protocolBufferFromString(data, false)[0]
 	bytesToSend = len(rawBuffer)
 
