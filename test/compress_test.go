@@ -127,3 +127,24 @@ func TestCompress(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 }
+
+func TestRowsetChunkCompressed(t *testing.T) {
+	var db *sqlitecloud.SQCloud
+	var err error
+
+	connectionString, _ := os.LookupEnv("SQLITE_CONNECTION_STRING")
+	apikey, _ := os.LookupEnv("SQLITE_API_KEY")
+	if db, err = sqlitecloud.Connect(connectionString + "?apikey=" + apikey); err != nil {
+		t.Fatal("CONNECT: ", err.Error())
+	}
+	defer db.Close()
+
+	switch res, err := db.Select("TEST ROWSET_CHUNK_COMPRESSED"); { // ROWSET
+	case err != nil:
+		t.Fatal("TEST ROWSET_CHUNK_COMPRESSED: ", err.Error())
+	case res == nil:
+		t.Fatal("TEST ROWSET_CHUNK_COMPRESSED: nil result")
+	case !res.IsRowSet():
+		t.Fatal("TEST ROWSET_CHUNK_COMPRESSED: invalid type")
+	}
+}
