@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -225,7 +226,7 @@ func protocolBufferFromValue(v interface{}) [][]byte {
 	switch v := v.(type) {
 	case nil:
 		return protocolBufferFromNull()
-	case int, int8, int16, int32, int64:
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 		return protocolBufferFromInt(v)
 	case float32, float64:
 		return protocolBufferFromFloat(v)
@@ -234,6 +235,13 @@ func protocolBufferFromValue(v interface{}) [][]byte {
 	case []byte:
 		return protocolBufferFromBytes(v)
 	default:
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Ptr {
+			if rv.IsNil() {
+				return protocolBufferFromNull()
+			}
+			return protocolBufferFromValue(rv.Elem().Interface())
+		}
 		return make([][]byte, 0)
 	}
 }
@@ -255,7 +263,14 @@ func protocolBufferFromInt(v interface{}) [][]byte {
 }
 
 func protocolBufferFromFloat(v interface{}) [][]byte {
-	return [][]byte{[]byte(fmt.Sprintf("%c%s ", CMD_FLOAT, strconv.FormatFloat(v.(float64), 'f', -1, 64)))}
+	var f float64
+	switch v := v.(type) {
+	case float32:
+		f = float64(v)
+	case float64:
+		f = v
+	}
+	return [][]byte{[]byte(fmt.Sprintf("%c%s ", CMD_FLOAT, strconv.FormatFloat(f, 'f', -1, 64)))}
 }
 
 // func protocolBufferFromFloat(v interface{}) [][]byte {
