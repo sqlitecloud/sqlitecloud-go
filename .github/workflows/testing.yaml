@@ -26,7 +26,9 @@ jobs:
       uses: golangci/golangci-lint-action@v6
       with:
         version: latest
-    - name: Tests
+    - name: Unit Tests
+      run: make test-unit-codecov
+    - name: Integration Tests
       env:
         SQLITE_CONNECTION_STRING: ${{ vars.SQLITE_CONNECTION_STRING }}
         SQLITE_USER: ${{ secrets.SQLITE_USER }}
@@ -40,4 +42,4 @@ jobs:
       uses: codecov/codecov-action@v4.0.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./test/coverage.out
+        files: ./coverage-unit.out,./test/coverage.out
