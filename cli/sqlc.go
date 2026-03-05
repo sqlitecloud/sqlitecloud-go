@@ -344,6 +344,9 @@ func parseParameters() (Parameter, error) {
 		if err := p.Bind(&parameter); err != nil {
 			return Parameter{}, err
 		}
+		if parameter.NewLine == "" {
+			parameter.NewLine = "\r\n"
+		}
 
 		// Postprocessing...
 		if parameter.OutFile != "" {

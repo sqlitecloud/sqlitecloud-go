@@ -7,7 +7,14 @@ setup-ide:
 	cd test; go mod tidy
 	cd cli; go mod tidy
 
-# Test SDK
+# Unit tests (root package)
+test-unit:
+	go test -v .
+
+test-unit-codecov:
+	go test -v -race -coverprofile=coverage-unit.out -covermode=atomic .
+
+# Integration tests (test/ directory)
 test:
 	cd test; go mod tidy && go test -v .
 
