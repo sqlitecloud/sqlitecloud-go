@@ -227,3 +227,81 @@ func TestCompressionEnabledByDefault(t *testing.T) {
 
 	assert.Equal(t, "1", value)
 }
+
+func TestUpdateReturningWithBindingsAlwaysReturnsRowset(t *testing.T) {
+	db, cleanup := setupDatabase(t)
+	defer cleanup()
+
+	const tableName = "test_update_returning_subquery_bindings"
+
+	if err := db.Execute(fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)); err != nil {
+		t.Fatal(err.Error())
+	}
+	defer func() {
+		if err := db.Execute(fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)); err != nil {
+			t.Fatalf("DROP TABLE cleanup: %s", err.Error())
+		}
+	}()
+
+	if err := db.Execute(fmt.Sprintf("CREATE TABLE %s (id INTEGER PRIMARY KEY, status TEXT, attempts INTEGER, payload TEXT)", tableName)); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	if err := db.ExecuteArray(
+		fmt.Sprintf("INSERT INTO %s (id, status, attempts, payload) VALUES (?, ?, ?, ?), (?, ?, ?, ?)", tableName),
+		[]any{1, "queued", 0, "first", 2, "done", 3, "second"},
+	); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE %s
+		SET status = ?, attempts = attempts + 1, payload = ?
+		WHERE id = (
+			SELECT id
+			FROM %s
+			WHERE status = ? AND attempts < ?
+			ORDER BY id ASC
+			LIMIT 1
+		)
+		RETURNING id, status, attempts, payload;
+	`, tableName, tableName)
+
+	result, err := db.SelectArray(
+		sql,
+		[]any{"running", "picked", "queued", 5},
+	)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	defer result.Free()
+
+	assert.True(t, result.IsRowSet())
+	assert.Equal(t, uint64(4), result.GetNumberOfColumns())
+	assert.Equal(t, uint64(1), result.GetNumberOfRows())
+	assert.Equal(t, "id", result.GetName_(0))
+	assert.Equal(t, "status", result.GetName_(1))
+	assert.Equal(t, "attempts", result.GetName_(2))
+	assert.Equal(t, "payload", result.GetName_(3))
+	assert.Equal(t, "1", result.GetStringValue_(0, 0))
+	assert.Equal(t, "running", result.GetStringValue_(0, 1))
+	assert.Equal(t, "1", result.GetStringValue_(0, 2))
+	assert.Equal(t, "picked", result.GetStringValue_(0, 3))
+
+	emptyResult, err := db.SelectArray(
+		sql,
+		[]any{"running", "picked-again", "missing", 5},
+	)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	defer emptyResult.Free()
+
+	assert.True(t, emptyResult.IsRowSet())
+	assert.Equal(t, uint64(4), emptyResult.GetNumberOfColumns())
+	assert.Equal(t, uint64(0), emptyResult.GetNumberOfRows())
+	assert.Equal(t, "id", emptyResult.GetName_(0))
+	assert.Equal(t, "status", emptyResult.GetName_(1))
+	assert.Equal(t, "attempts", emptyResult.GetName_(2))
+	assert.Equal(t, "payload", emptyResult.GetName_(3))
+}
