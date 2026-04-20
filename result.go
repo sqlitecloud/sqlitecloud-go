@@ -121,7 +121,7 @@ func (this *Result) Dump() {
 // ToJSON returns a JSON representation of this query result.
 func (this *Result) ToJSON() string {
 	buf := new(bytes.Buffer)
-	_, _ = this.DumpToWriter(bufio.NewWriter(buf), OUTFORMAT_JSON, false, "<AUTO>", "NULL", "", 0, false)
+	_, _ = this.DumpToWriter(bufio.NewWriter(buf), OUTFORMAT_JSON, false, "<AUTO>", "null", "", 0, false)
 	return buf.String()
 }
 
